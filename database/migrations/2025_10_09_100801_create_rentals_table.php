@@ -22,7 +22,6 @@ return new class extends Migration
     // Rental details
     $table->decimal('rent_fare', 10, 2);
     $table->decimal('rent_deposit', 10, 2)->nullable();
-    $table->enum('rent_type', ['hourly', 'daily']);
     $table->integer('duration')->nullable(); // hours or days
     $table->dateTime('start_date')->nullable();
     $table->dateTime('end_date')->nullable();

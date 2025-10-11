@@ -1,71 +1,65 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-bold mb-4 text-center">All Product Listings</h1>
+    <div class="max-w-7xl mx-auto py-4 sm:px-4 lg:px-6">
+        <h1 class="text-xl font-bold mb-3 text-center">All Product Listings</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 product-grid">
             @foreach ($products as $product)
-                <div class="bg-white shadow rounded-lg overflow-hidden">
+                <div class="bg-white shadow-sm rounded-md overflow-hidden flex flex-col max-w-[140px] min-w-0 product-card">
                     @if($product->image)
                         <img src="{{ asset('storage/' . $product->image) }}" 
                              alt="{{ $product->title }}" 
-                             class="w-full h-48 object-cover">
+                             class="w-full h-20 object-contain product-image">
                     @else
-                        <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                        <div class="w-full h-20 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
                             No Image
                         </div>
                     @endif
 
-                    <div class="p-4">
-                        <h2 class="text-lg font-semibold">{{ $product->title }}</h2>
-                        <p class="text-gray-600 text-sm">{{ Str::limit($product->description, 80) }}</p>
-                        <p class="font-bold mt-2">Rs. {{ $product->price }}</p>
-                        <p class="text-sm text-gray-500 capitalize mt-1">{{ $product->category }}</p>
+                    <div class="p-2 flex flex-col flex-grow">
+                        <h2 class="text-xs font-medium truncate">{{ $product->title }}</h2>
+                        <p class="text-gray-600 text-xs mt-1 truncate">{{ Str::limit($product->description, 30) }}</p>
+                        <p class="font-bold text-xs mt-1">Rs. {{ $product->price }}</p>
+                        <p class="text-xs text-gray-500 capitalize">{{ $product->category }}</p>
 
                         @auth
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                {{-- Buy Option --}}
+                            <div class="mt-2 flex flex-wrap gap-1">
                                 @if(in_array('sell', $product->type))
                                     <form action="{{ route('order.store', $product->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="type" value="buy">
-                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded text-xs">
                                             Buy
                                         </button>
                                     </form>
                                 @endif
 
-                                {{-- Rent Option --}}
                                 @if(in_array('rent', $product->type))
-                                    <form action="{{ route('order.store', $product->id) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="type" value="rent">
-                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
-                                            Rent
-                                        </button>
-                                    </form>
-                                @endif
+    <a href="{{ route('rental.create', $product->id) }}" 
+       class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded text-xs inline-block text-center">
+       Rent
+    </a>
+@endif
 
-                                {{-- Swap Option --}}
                                 @if(in_array('swap', $product->type))
                                     <form action="{{ route('order.store', $product->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="type" value="swap">
-                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded text-xs">
                                             Swap
                                         </button>
                                     </form>
                                 @endif
-                                
-                            <form action="{{ route('cart.store', $product->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="type" value="buy">
-                                <button class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-1 rounded text-sm">
-                                    Add to Cart 🛒
-                                </button>
-                            </form>
 
+                                <form action="{{ route('cart.store', $product->id) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="type" value="buy">
+                                    <button class="bg-gray-800 hover:bg-gray-900 text-white px-2 py-0.5 rounded text-xs">
+                                        🛒
+                                    </button>
+                                </form>
+                            </div>
                         @else
-                            <p class="text-sm text-red-500 mt-3">Login to Buy / Rent / Swap</p>
+                            <p class="text-xs text-red-500 mt-1">Login to Buy/Rent/Swap</p>
                         @endauth
                     </div>
                 </div>

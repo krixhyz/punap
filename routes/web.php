@@ -60,6 +60,16 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+use App\Http\Controllers\RentalController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/rent/{product}', [RentalController::class, 'create'])->name('rental.create');
+    Route::post('/rent/{product}', [RentalController::class, 'store'])->name('rental.store');
+    Route::get('/rent/{rental}/checkout', [RentalController::class, 'checkout'])->name('rental.checkout');
+});
+
+
+
 
 
 require __DIR__.'/auth.php';
