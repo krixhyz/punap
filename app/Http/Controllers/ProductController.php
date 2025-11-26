@@ -46,6 +46,7 @@ class ProductController extends Controller
             'start_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:today',
             'end_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:start_date',
             'rent_duration' => 'required_if:listing_type.*,rent|nullable|integer|min:1',
+            'quantity' => 'required|integer|min:1', // NEW
         ]);
 
         // Handle image upload
@@ -66,6 +67,7 @@ class ProductController extends Controller
             'description' => $request->description,
             'category' => $request->category,
             'price' => $request->price,
+            'quantity' => $request->quantity, // NEW
             'type' => $request->listing_type,
             'image' => $imagePath,
             'status' => 'available',
@@ -84,8 +86,9 @@ class ProductController extends Controller
     'status'=>'available'
 ]);
         }
+        
 
-        return redirect()->route('dashboard')->with('success', 'Listing added successfully!');
+        return redirect()->route('dashboard')->with('success', 'Listing added successfully!'); // ENSURE route
     }
 
 
@@ -118,6 +121,7 @@ public function update(Request $request, $id)
         'start_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:today',
         'end_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:start_date',
         'rent_duration' => 'required_if:listing_type.*,rent|nullable|integer|min:1',
+        'quantity' => 'required|integer|min:1', // NEW
     ]);
 
     // Handle image replacement (optional)
@@ -136,6 +140,7 @@ public function update(Request $request, $id)
         'description' => $request->description,
         'category' => $request->category,
         'price' => $request->price,
+        'quantity' => $request->quantity, // NEW
         'type' => $request->listing_type,
     ]);
 
@@ -164,31 +169,46 @@ public function update(Request $request, $id)
 {
     $user = Auth::user();
 
-    // All products owned by this user
-    $products = $user->products()->get();
-
-    // Fetch pending rental requests from rental_requests table where the logged-in user is the owner
+    // Eager-load orders for accurate sold calculations
+    $products = $user->products()->with('orders')->get(); // UPDATED
     $pendingRequests = RentalRequest::with(['product', 'renter'])
         ->where('owner_id', $user->id)
         ->where('status', 'requested')
         ->latest()
         ->get();
 
-    // Active rentals (from rented_rentals table)
     $activeRentals = RentedRentals::with(['product', 'renter'])
         ->where('owner_id', $user->id)
         ->where('status', 'active')
         ->latest()
         ->get();
 
-    // Sold products
-    $soldProducts = $user->products()->where('status', 'sold')->get();
+    // Sold products with orders
+    $soldProducts = $user->products() // CHANGED: include partially sold (has buy orders)
+        ->whereHas('orders', function ($q) {
+            $q->where('transaction_type', 'buy');
+        })
+        ->with(['orders' => function ($q) {
+            $q->where('transaction_type', 'buy');
+        }])
+        ->get();
+
+    $swapRequests = \App\Models\Swap::whereHas('requestedProduct', function ($query) use ($user) {
+        $query->where('user_id', $user->id);
+    })->where('status', 'pending')->get();
+
+    $activeSwaps = \App\Models\Swap::where(function ($query) use ($user) {
+        $query->whereHas('requestedProduct', fn($q) => $q->where('user_id', $user->id))
+              ->orWhereHas('offeredProduct', fn($q) => $q->where('user_id', $user->id));
+    })->where('status', 'accepted')->get();
 
     return view('products.my_listings', compact(
         'products',
         'pendingRequests',
         'activeRentals',
-        'soldProducts'
+        'soldProducts',
+        'swapRequests',
+        'activeSwaps'
     ));
 }
 
@@ -201,7 +221,21 @@ public function update(Request $request, $id)
         ]);
 
         $product = Product::where('user_id', Auth::id())->findOrFail($id);
-        $product->status = $request->status;
+
+        // If attempting to mark sold but still has units, block it
+        if ($request->status === 'sold' && $product->quantity > 0) {
+            return redirect()->back()
+                ->with('error', 'Cannot mark as sold while quantity > 0. Quantity must reach 0 after purchases.');
+        }
+
+        // Only allow sold when quantity == 0
+        if ($request->status === 'sold' && $product->quantity === 0) {
+            $product->status = 'sold';
+        } else {
+            // For other statuses just set directly
+            $product->status = $request->status;
+        }
+
         $product->save();
 
         return redirect()->back()->with('success', 'Product status updated successfully!');
@@ -234,9 +268,23 @@ public function myPurchases()
     // Purchased products (if you have a purchases/orders table, adjust accordingly)
     $orders = $user->orders()->with('product')->orderByDesc('created_at')->get();
 
-    return view('products.my_purchases', compact('rentedRentals', 'orders'));
+     // Swaps involving this user
+    $swaps = \App\Models\Swap::where(function($query) use ($user) {
+            $query->where('owner_a_id', $user->id)
+                  ->orWhere('owner_b_id', $user->id);
+        })
+        ->where('status', 'completed') // show only completed swaps
+        ->with(['requestedProduct', 'offeredProduct'])
+        ->latest()
+        ->get();
+
+    return view('products.my_purchases', compact('rentedRentals', 'orders', 'swaps'));
 }
 
-
+public function show($id)
+{
+    $product = Product::with(['user', 'rentals'])->findOrFail($id);
+    return view('products.show', compact('product'));
+}
 
 }

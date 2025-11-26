@@ -43,11 +43,9 @@
                                    hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none 
                                    transition ease-in-out duration-150">
                             <div>
-                                @auth
-                                    {{ Auth::user()->name }}
-                                @else
-                                    Guest
-                                @endauth
+                              
+                                    {{ Auth::check() ? Auth::user()->name : 'Guest' }}
+
                             </div>
 
                             <div class="ms-1">

@@ -21,6 +21,8 @@
                 <h5 class="text-sm font-medium">{{ $product->title }}</h5>
                 <p class="text-gray-600 text-xs mt-1">{{ Str::limit($product->description, 100) }}</p>
                 <p class="text-xs mb-1"><strong>Category:</strong> {{ $product->category ?? 'General' }}</p>
+                <p class="text-xs mb-1"><strong>Available Quantity:</strong> {{ $product->quantity }}</p> <!-- NEW -->
+                <p class="text-[11px] text-gray-500 mb-2">Note: Renting is limited to one unit per request.</p> <!-- NEW -->
 
                @php
     $rental = $product->rentals()->first();
@@ -57,7 +59,7 @@
                       data-rent-deposit="{{ $rental ? $rental->rent_deposit : 0 }}"
                       data-max-duration="{{ $rental ? $rental->duration : 100 }}"
                       data-owner-start-date="{{ $rental && $rental->available_from ? \Carbon\Carbon::parse($rental->available_from)->format('Y-m-d') : '' }}"
-data-owner-end-date="{{ $ownerEndDate }}">
+                      data-owner-end-date="{{ $ownerEndDate }}">
 
                     @csrf
 
@@ -91,6 +93,10 @@ data-owner-end-date="{{ $ownerEndDate }}">
     </div>
 
     <script>
+
+
+
+
 const form = document.getElementById('rentalForm');
 const startInput = document.getElementById('startDate');
 const endInput = document.getElementById('endDate');

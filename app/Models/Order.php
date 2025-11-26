@@ -13,7 +13,14 @@ class Order extends Model
         'buyer_id',
         'product_id',
         'transaction_type',
+        'quantity',
+        'unit_price',    // NEW
+        'total_price',    // NEW
         'status',
+    ];
+
+    protected $casts = [
+        'quantity' => 'integer', // NEW
     ];
 
     // Relationships

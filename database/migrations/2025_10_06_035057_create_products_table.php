@@ -17,6 +17,7 @@ return new class extends Migration
         $table->string('title');
         $table->text('description');
         $table->decimal('price', 10, 2)->nullable();
+        $table->integer('quantity')->default(1); // NEW: available units
         $table->json('type')->nullable(); // store as ["sell", "rent", "swap"]
         $table->string('category')->nullable();
         $table->string('image')->nullable();

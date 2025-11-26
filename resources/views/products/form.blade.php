@@ -55,6 +55,14 @@
             </div>
         </div>
 
+        {{-- Quantity --}}
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Quantity (Units Available)</label>
+            <input type="number" name="quantity" min="1"
+                   value="{{ old('quantity', $product->quantity ?? 1) }}"
+                   class="w-full border-gray-300 rounded-lg text-sm p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+        </div>
+
         {{-- Sell Price --}}
         <div id="priceSection" class="transition-all duration-300 {{ in_array('sell', $selectedTypes) ? '' : 'hidden' }}">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Price (For Sale)</label>
@@ -124,6 +132,15 @@
 </div>
 
 <script>
+
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', () => {
+        if (parseFloat(input.value) < 0) {
+            input.value = '';
+        }
+    });
+});
+
     const rentCheckbox = document.querySelector('input[value="rent"]');
     const sellCheckbox = document.querySelector('input[value="sell"]');
     const rentSection = document.getElementById('rentSection');
@@ -131,6 +148,8 @@
     const startDate = document.getElementById('startDate');
     const endDate = document.getElementById('endDate');
     const rentDuration = document.getElementById('rentDuration');
+    const swapCheckbox = document.querySelector('input[value="swap"]');
+
 
     // Set min dates to today
     const today = new Date().toISOString().split('T')[0];
@@ -140,10 +159,12 @@
     // Show/hide sections based on checkboxes
     function updateSections() {
         rentSection.classList.toggle('hidden', !rentCheckbox.checked);
-        priceSection.classList.toggle('hidden', !sellCheckbox.checked);
+        priceSection.classList.toggle('hidden', !(sellCheckbox.checked || swapCheckbox.checked));
+
     }
     rentCheckbox.addEventListener('change', updateSections);
     sellCheckbox.addEventListener('change', updateSections);
+    swapCheckbox.addEventListener('change', updateSections);
     document.addEventListener('DOMContentLoaded', updateSections);
 
     // Duration auto-calc

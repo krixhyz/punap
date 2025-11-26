@@ -14,6 +14,7 @@ class Product extends Model
         'title',
         'description',
         'price',
+        'quantity', // NEW
         'type',
         'category',
         'image',
@@ -22,6 +23,7 @@ class Product extends Model
 
     protected $casts = [
         'type' => 'array', // important for multi-type support
+        'quantity' => 'integer', // NEW
     ];
 
 
@@ -71,6 +73,22 @@ public function rentals()
     public function user()
 {
     return $this->belongsTo(\App\Models\User::class, 'user_id');
+}
+
+
+public function receivedSwapRequests()
+{
+    return $this->hasMany(SwapRequest::class, 'product_id');
+}
+
+public function offeredSwapRequests()
+{
+    return $this->hasMany(SwapRequest::class, 'offered_product_id');
+}
+
+public function orders()
+{
+    return $this->hasMany(\App\Models\Order::class); // NEW
 }
 
 

@@ -98,6 +98,18 @@ public function approvedRentalsAsOwner()
     return $this->hasMany(\App\Models\RentedRentals::class, 'owner_id');
 }
 
+public function swapRequestsMade()
+{
+    return $this->hasMany(SwapRequest::class, 'requester_id');
+}
+
+public function swapRequestsReceived()
+{
+    return $this->hasMany(SwapRequest::class, 'owner_id');
+}
+
+
+
 
 
 }

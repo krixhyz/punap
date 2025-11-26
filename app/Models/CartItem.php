@@ -12,9 +12,12 @@ class CartItem extends Model
     protected $fillable = [
         'user_id',
         'product_id',
+        'quantity', // NEW
         'type',
-        'quantity',
-        'rent_duration',
+    ];
+
+    protected $casts = [
+        'quantity' => 'integer', // NEW
     ];
 
     // Relationships

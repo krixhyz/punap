@@ -9,6 +9,14 @@ use App\Http\Controllers\ProductController;
 //     return view('welcome');
 // });
 
+
+use App\Events\MessageSent;
+
+Route::get('/test-broadcast', function () {
+    broadcast(new MessageSent('Hello World'));
+    return 'Broadcasted';
+});
+
 use App\Http\Controllers\DashboardController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -28,10 +36,27 @@ use App\Http\Controllers\OrderController;
 
 Route::post('/order/{product}', [OrderController::class, 'store'])->name('order.store');
 Route::get('/order/{order}/checkout', [OrderController::class, 'checkout'])->name('order.checkout');
+Route::post('/order/{order}/confirm', [OrderController::class, 'confirm'])->name('order.confirm'); // NEW
 
 
 
 Route::get('/', [ProductController::class, 'index'])->name('products.index');
+
+
+// Listing routes (must be before {id} route to avoid conflict)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create'); // MOVED HERE
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+
+    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
+
+    Route::get('/my-listings', [ProductController::class, 'myListings'])->name('products.myListings');
+    Route::patch('/products/{id}/status', [ProductController::class, 'updateStatus'])->name('products.updateStatus');
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+});
+
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show'); // KEEP THIS AFTER SPECIFIC ROUTES
 
 
 // Protect buy/rent/swap routes:
@@ -55,26 +80,13 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-// Listing routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-
-    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
-    Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
-
-    Route::get('/my-listings', [ProductController::class, 'myListings'])->name('products.myListings');
-    Route::patch('/products/{id}/status', [ProductController::class, 'updateStatus'])->name('products.updateStatus');
-    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
-});
-
-
+// Rental routes
 use App\Http\Controllers\RentalController;
 
 Route::middleware(['auth'])->group(function () {
     // renter side
     Route::get('/rent/{product}', [RentalController::class, 'create'])->name('rental.create');
-    Route::post('/rent/{product}', [RentalController::class, 'store'])->name('rental.store');
+    Route::post('/rental/request/{product}', [RentalController::class, 'store'])->name('rental.store');
     Route::get('/rental/checkout/{request}', [RentalController::class, 'checkout'])->name('rental.checkout');
 
     // owner side (reviewing rental requests)
@@ -83,6 +95,8 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/rental/request/{request}/reject', [RentalController::class, 'reject'])->name('rental.reject');
 
 
+    Route::patch('/rental/{rentedRental}/return', [RentalController::class, 'returnRental'])->name('rental.return'); // NEW
+
 });
 
 //my purchases route
@@ -90,8 +104,52 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-purchases', [ProductController::class, 'myPurchases'])->name('products.myPurchases');
 });
 
+
+
 use App\Http\Controllers\NotificationController;
 Route::post('/notifications/mark-read', [NotificationController::class, 'markRead'])->name('notifications.markRead')->middleware('auth');
+
+
+
+
+use App\Http\Controllers\SwapRequestController;
+
+Route::middleware(['auth'])->group(function () {
+    // Show request form
+    Route::post('/swap/request/{product}', [SwapRequestController::class, 'showRequestForm'])
+        ->name('swap.request.form');
+
+    // Submit swap request
+    Route::post('/swap/request', [SwapRequestController::class, 'store'])
+        ->name('swap.request.store');
+
+    // Show incoming swap requests (for owners)
+    Route::get('/swap/requests', [SwapRequestController::class, 'incoming'])
+        ->name('swap.request.incoming');
+       
+       
+    Route::get('/swap/request/{swapRequest}', [SwapRequestController::class, 'show'])
+    ->name('swap.request.show');
+
+
+    // Accept swap request
+    Route::post('/swap/{swapRequest}/accept', [SwapRequestController::class, 'accept'])
+        ->name('swap.request.accept');
+
+    // Reject swap request
+    Route::post('/swap/{swapRequest}/reject', [SwapRequestController::class, 'reject'])
+        ->name('swap.request.reject');
+});
+
+
+
+use App\Events\TestBroadcast;
+
+Route::get('/test-broadcast', function () {
+    Log::info('Dispatching TestBroadcast...');
+    broadcast(new TestBroadcast());
+    return 'Broadcast sent';
+});
 
 
 require __DIR__.'/auth.php';

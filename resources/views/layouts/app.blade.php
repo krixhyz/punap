@@ -32,5 +32,13 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Alpine.js -->
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+        <!-- Inject userId for Echo -->
+       @if(auth()->check())
+    <meta name="user" content='@json(auth()->user())'>
+@endif
     </body>
 </html>

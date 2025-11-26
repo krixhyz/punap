@@ -19,12 +19,13 @@ class RentalRequestNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // we’ll add 'mail' tomorrow
+        return ['database']; // Store in database
     }
 
     public function toDatabase($notifiable)
 {
     return [
+        'type' => 'rental',
         'rental_request_id' => $this->rentalRequest->id,
         'product_id' => $this->rentalRequest->product_id,
         'renter_id' => $this->rentalRequest->renter_id,

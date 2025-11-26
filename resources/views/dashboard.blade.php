@@ -1,29 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Dashboard') }}
-            </h2>
 
-            <div class="flex items-center gap-3">
-                <!-- Dark mode toggle -->
-                <button id="darkToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                    <svg id="moon" class="w-5 h-5 dark:hidden text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M21.752 15.002A9.718 9.718 0 0112.01 21a9.718 9.718 0 01-9.742-8.748 9.74 9.74 0 0013.2-11.22A9.724 9.724 0 0121.752 15z" />
-                    </svg>
-                    <svg id="sun" class="hidden w-5 h-5 dark:inline text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M12 3v1m0 16v1m8.485-8.485l.707.707M4.808 4.808l.707.707m12.97 12.97l.707.707M4.808 19.192l.707.707M21 12h1M2 12H1m9-9h4a9 9 0 100 18h-4a9 9 0 000-18z" />
-                    </svg>
-                </button>
-
-                <a href="{{ route('products.create') }}" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm shadow-sm transition">
-                    Add Listing
-                </a>
-            </div>
-        </div>
-    </x-slot>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Hero -->
@@ -82,96 +58,171 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Notifications -->
-            <div class="lg:col-span-2">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Rental Notifications</h3>
-                        <span id="notification-badge" class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            {{ auth()->user()->unreadNotifications->count() }} New
-                        </span>
-                    </div>
+           <!-- Notifications -->
+<div class="lg:col-span-2">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Notifications</h3>
+            <span id="notification-badge" class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                {{ auth()->user()->unreadNotifications->count() }} New
+            </span>
+        </div>
 
-                    <div class="p-6 space-y-3">
-                        @forelse(auth()->user()->unreadNotifications as $notification)
-                            @php
-                                $rentalId = $notification->data['rental_request_id'] ?? null;
-                                $readUrl = route('rental.review', $rentalId ?? 0);
-                            @endphp
+        <div class="p-6 space-y-6 min-h-[200px]">
+            @php
+                $grouped = [
+                    'requests' => [],
+                    'accepted' => [],
+                    'rejected' => [],
+                ];
 
-                            <a href="{{ $readUrl }}" data-notification-id="{{ $notification->id }}"
-                               class="notification-item flex items-start space-x-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors block"
-                               onclick="event.preventDefault(); markReadAndRedirect(this);">
-                                <div class="flex-shrink-0">
-                                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8V6a2 2 0 00-2-2H5a2 2 0 00-2 2v2m18 0l-9 6-9-6m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8" />
-                                        </svg>
+                foreach (auth()->user()->unreadNotifications as $notification) {
+                    $type = $notification->data['type'] ?? 'unknown';
+                    $group = match(true) {
+                        in_array($type, ['rental', 'swap']) => 'requests',
+                        in_array($type, ['rentalAccept', 'swapAccept']) => 'accepted',
+                        in_array($type, ['rentalReject', 'swapReject']) => 'rejected',
+                        default => null,
+                    };
+                    if ($group) $grouped[$group][] = $notification;
+                }
+            @endphp
+
+            @foreach (['requests' => 'New Requests', 'accepted' => 'Accepted', 'rejected' => 'Rejected'] as $key => $label)
+                @if (count($grouped[$key]))
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{{ $label }}</h4>
+                        <div class="space-y-3">
+                            @foreach ($grouped[$key] as $notification)
+                                @php
+                                    $type = $notification->data['type'] ?? 'unknown';
+                                    $id = $notification->id;
+
+                                    $message = match($type) {
+                                        'rentalAccept' => 'Your rental request has been accepted.',
+                                        'rentalReject' => 'Your rental request has been rejected.',
+                                        'swapAccept' => 'Your swap request has been accepted.',
+                                        'swapReject' => 'Your swap request has been rejected.',
+                                        'rental' => 'You have a new rental request.',
+                                        'swap' => 'You have a new swap request.',
+                                        default => $notification->data['message'] ?? 'You have a new notification.',
+                                    };
+
+                                    $readUrl = match(true) {
+                                        $type === 'rental' => route('rental.review', ['request' => $notification->data['rental_request_id'] ?? 0]),
+                                        $type === 'swap' => route('swap.request.incoming', $notification->data['swap_request_id'] ?? 0),
+                                        in_array($type, ['rentalAccept', 'swapAccept']) => route('products.myPurchases'),
+                                        default => request()->url(),
+                                    };
+                                @endphp
+
+                                <a href="{{ $readUrl }}" data-notification-id="{{ $id }}"
+                                   class="notification-item flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors block"
+                                   onclick="event.preventDefault(); markReadAndRedirect(this);">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8V6a2 2 0 00-2-2H5a2 2 0 00-2 2v2m18 0l-9 6-9-6m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $notification->data['message'] ?? 'You have a new rental request' }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                    <button class="text-blue-600 dark:text-blue-400 text-xs font-medium hover:underline mt-2">View Request →</button>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="text-center py-8">
-                                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l9 6 9-6M3 8v8a2 2 0 002 2h14a2 2 0 002-2V8m-9 6v6" />
-                                    </svg>
-                                </div>
-                                <p class="text-gray-500 dark:text-gray-400">No new notifications</p>
-                                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">You're all caught up.</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $message }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
 
-            <!-- Quick Stats -->
-            <aside class="space-y-4">
-                @php
-                    $activeListings = auth()->user()->rentalListings()->where('status', 'available')->count();
-                    $thisMonthRevenue = auth()->user()->approvedRentalsAsOwner()
-                        ->whereMonth('created_at', now()->month)
-                        ->sum('total_amount');
-                    $totalRentalsMade = auth()->user()->rentedItems()->count();
-                    $pendingRequests = auth()->user()->incomingRentalRequests()
-                        ->where('status', 'requested')->count();
-                    $rating = auth()->user()->rating ?? 4.9;
-                @endphp
+                                        @if ($key === 'accepted')
+                                            <div class="mt-2">
+                                                <a href="{{ route('products.myPurchases') }}" class="text-blue-600 dark:text-blue-400 text-xs font-medium hover:underline">
+                                                    {{ $type === 'rentalAccept' ? 'View Rental →' : 'View Swap →' }}
+                                                </a>
+                                            </div>
+                                        @elseif ($key === 'requests')
+                                            <div class="mt-2">
+                                                <span class="text-blue-600 dark:text-blue-400 text-xs font-medium hover:underline">View Request →</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            @endforeach
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="p-4 bg-white shadow rounded-lg">
-                        <h4 class="text-sm text-gray-500">Active Listings</h4>
-                        <p class="text-xl font-bold">{{ $activeListings }}</p>
-                    </div>
-                    <div class="p-4 bg-white shadow rounded-lg">
-                        <h4 class="text-sm text-gray-500">This Month Revenue</h4>
-                        <p class="text-xl font-bold">Rs. {{ number_format($thisMonthRevenue, 2) }}</p>
-                    </div>
-                    <div class="p-4 bg-white shadow rounded-lg">
-                        <h4 class="text-sm text-gray-500">Total Rentals Made</h4>
-                        <p class="text-xl font-bold">{{ $totalRentalsMade }}</p>
-                    </div>
-                    <div class="p-4 bg-white shadow rounded-lg">
-                        <h4 class="text-sm text-gray-500">Pending Requests</h4>
-                        <p class="text-xl font-bold text-red-600">{{ $pendingRequests }}</p>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center">
-                    <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
-                        <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927C9.349 2.022 10.651 2.022 10.951 2.927L12.184 6.41a1 1 0 00.95.69h3.55c.969 0 1.371 1.24.588 1.81l-2.875 2.09a1 1 0 00-.364 1.118l1.1 3.396c.3.925-.755 1.688-1.54 1.118l-2.874-2.09a1 1 0 00-1.176 0l-2.875 2.09c-.785.57-1.84-.193-1.54-1.118l1.1-3.396a1 1 0 00-.364-1.118L2.728 8.91c-.783-.57-.38-1.81.588-1.81h3.55a1 1 0 00.95-.69l1.233-3.483z" />
+            @if (count($grouped['requests']) + count($grouped['accepted']) + count($grouped['rejected']) === 0)
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l9 6 9-6M3 8v8a2 2 0 002 2h14a2 2 0 002-2V8m-9 6v6" />
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rating</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $rating }}</p>
+                    <p class="text-gray-500 dark:text-gray-400">No new notifications</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">You're all caught up.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+
+            <!-- Quick Stats -->
+            <aside class="space-y-6">
+                {{-- Seller Metrics --}}
+                <div class="bg-white rounded-xl shadow p-5">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-4">Seller Metrics</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Units Listed</p>
+                            <p class="font-bold">{{ $sellerMetrics['total_units_listed'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Active Units</p>
+                            <p class="font-bold">{{ $sellerMetrics['active_units'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Units Sold</p>
+                            <p class="font-bold">{{ $sellerMetrics['units_sold'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Sales Revenue</p>
+                            <p class="font-bold">Rs. {{ number_format($sellerMetrics['sales_revenue'],2) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Active Rentals (Owner)</p>
+                            <p class="font-bold">{{ $sellerMetrics['active_rentals_owner'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Rental Revenue</p>
+                            <p class="font-bold">Rs. {{ number_format($sellerMetrics['rental_revenue_owner'],2) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Buyer Metrics --}}
+                <div class="bg-white rounded-xl shadow p-5">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-4">Buyer Metrics</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Purchases</p>
+                            <p class="font-bold">{{ $buyerMetrics['purchases_count'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Units Bought</p>
+                            <p class="font-bold">{{ $buyerMetrics['purchased_units'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Total Spent</p>
+                            <p class="font-bold">Rs. {{ number_format($buyerMetrics['total_spent'],2) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Active Rentals (Renter)</p>
+                            <p class="font-bold">{{ $buyerMetrics['active_rentals_renter'] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Completed Swaps</p>
+                            <p class="font-bold">{{ $buyerMetrics['completed_swaps'] }}</p>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -195,25 +246,27 @@
         })();
 
         async function markReadAndRedirect(el) {
-            const url = el.getAttribute('href');
-            const id = el.dataset.notificationId;
-            if (!id) return (window.location.href = url);
-            try {
-                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                await fetch("{{ route('notifications.markRead') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ id })
-                });
-            } catch (e) {
-                console.error(e);
-            } finally {
-                window.location.href = url;
-            }
-        }
+    const id = el.dataset.notificationId;
+    const url = el.getAttribute('href') || "{{ route('products.myPurchases') }}"; // fallback if href is missing
+
+    if (!id) return window.location.href = url;
+
+    try {
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        await fetch("{{ route('notifications.markRead') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ id })
+        });
+    } catch (e) {
+        console.error(e);
+    } finally {
+        window.location.href = url;
+    }
+}
     </script>
 </x-app-layout>
