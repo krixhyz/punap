@@ -227,6 +227,39 @@
                 </div>
             </aside>
         </div>
+
+        <div class="mt-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="font-semibold">Flagged Products</h2>
+            <span class="text-sm text-gray-500">
+                These items were flagged by moderators. Review or edit to resolve.
+            </span>
+        </div>
+        <ul class="divide-y divide-gray-100">
+            @php
+                $flagged = auth()->user()->products()->where('flagged', true)->latest()->get();
+            @endphp
+            @forelse ($flagged as $product)
+                <li class="p-5">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="font-medium">{{ $product->title }}</div>
+                            <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($product->description, 120) }}</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded text-xs bg-red-100 text-red-700">Flagged</span>
+                            <a href="{{ route('products.edit', $product->id) }}"
+                               class="px-3 py-1 rounded bg-indigo-600 text-white text-xs hover:bg-indigo-700">Edit</a>
+                        </div>
+                    </div>
+                </li>
+            @empty
+                <li class="p-5 text-sm text-gray-500">No flagged products.</li>
+            @endforelse
+        </ul>
+    </div>
+</div>
     </div>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">

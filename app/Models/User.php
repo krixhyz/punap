@@ -108,6 +108,12 @@ public function swapRequestsReceived()
     return $this->hasMany(SwapRequest::class, 'owner_id');
 }
 
+public function isAdmin(): bool
+{
+    // Adjust this condition to match how "admin" is stored in your DB
+    return $this->role === 'admin';
+}
+
 
 
 

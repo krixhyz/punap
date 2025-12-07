@@ -142,14 +142,27 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+use App\Http\Controllers\AdminController;
 
-use App\Events\TestBroadcast;
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-Route::get('/test-broadcast', function () {
-    Log::info('Dispatching TestBroadcast...');
-    broadcast(new TestBroadcast());
-    return 'Broadcast sent';
+    Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::get('/users/{id}', [AdminController::class, 'userShow'])->name('users.show');
+    Route::put('/users/{user}', [AdminController::class, 'userUpdate'])->name('users.update');
+    Route::delete('/users/{user}', [AdminController::class, 'userDelete'])->name('users.delete');
+
+    Route::get('/products', [AdminController::class, 'products'])->name('products');
+    Route::patch('/products/{product}/flag', [AdminController::class, 'productFlag'])->name('products.flag');     // PATCH
+    Route::patch('/products/{product}/unflag', [AdminController::class, 'productUnflag'])->name('products.unflag'); // optional
+    Route::delete('/products/{product}', [AdminController::class, 'productDelete'])->name('products.delete');
 });
 
 
+
+
 require __DIR__.'/auth.php';
+
+//Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

@@ -1,55 +1,34 @@
-import './bootstrap';
-import Alpine from 'alpinejs';
+import 'bootstrap';
+
+/**
+ * We'll load the axios HTTP library which allows us to easily issue requests
+ * to our Laravel back-end. This library automatically handles sending the
+ * CSRF token as a header based on the value of the "XSRF" token cookie.
+ */
+
 import axios from 'axios';
-import Echo from 'laravel-echo';
-
-
-
-window.Alpine = Alpine;
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// ✅ Start Alpine
-Alpine.start();
+/**
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events that are broadcast by Laravel. Echo and event broadcasting
+ * allows your team to easily build robust real-time web applications.
+ */
 
-const userMeta = document.querySelector('meta[name="user"]');
-if (userMeta) {
-    window.user = JSON.parse(userMeta.content);
+// import Echo from 'laravel-echo';
 
-    window.Echo.private(`App.Models.User.${window.user.id}`)
-        .notification((notification) => {
-            console.log("🔔 New Notification:", notification);
+// import Pusher from 'pusher-js';
+// window.Pusher = Pusher;
 
-        });
-}
-
-
-const reverbPort = Number(import.meta.env.VITE_REVERB_PORT) || 8080;
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: null,
-    wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-    wsPort: reverbPort,
-    wssPort: reverbPort,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
-    enabledTransports: ['ws', 'wss'],
-});
-
-// ✅ Listen for private events if user is logged in
-if (window.user && window.user.id) {
-    window.Echo.private(`user.${window.user.id}`)
-        .listen('.swap.requested', (e) => {
-            console.log("New Swap Request", e);
-        })
-        .listen('.swap.accepted', (e) => {
-            console.log("Swap Accepted", e);
-        })
-        .listen('.swap.rejected', (e) => {
-            console.log("Swap Rejected", e);
-        });
-}
-
-// (Optional) If you have additional Echo setup
-import './echo';
+// window.Echo = new Echo({
+//     broadcaster: 'pusher',
+//     key: import.meta.env.VITE_PUSHER_APP_KEY,
+//     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
+//     wsHost: import.meta.env.VITE_PUSHER_HOST ?? `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
+//     wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
+//     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
+//     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
+//     enabledTransports: ['ws', 'wss'],
+// });

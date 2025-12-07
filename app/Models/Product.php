@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Product extends Model
 {
@@ -13,6 +14,7 @@ class Product extends Model
         'user_id',
         'title',
         'description',
+        'flagged',
         'price',
         'quantity', // NEW
         'type',
@@ -24,6 +26,7 @@ class Product extends Model
     protected $casts = [
         'type' => 'array', // important for multi-type support
         'quantity' => 'integer', // NEW
+        'flagged' => 'boolean',
     ];
 
 
@@ -70,9 +73,9 @@ public function rentals()
     /** 
      * Get the user that owns the product.
      */
-    public function user()
+    public function user(): BelongsTo
 {
-    return $this->belongsTo(\App\Models\User::class, 'user_id');
+    return $this->belongsTo(User::class);
 }
 
 
