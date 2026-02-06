@@ -22,6 +22,11 @@ class SwapRequest extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function requestedProduct()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
     public function offeredProduct()
     {
         return $this->belongsTo(Product::class, 'offered_product_id');

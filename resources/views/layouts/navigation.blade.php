@@ -10,7 +10,7 @@
                         <div class="flex items-center gap-8">
                             <a href="{{ route('products.index') }}" 
                                class="text-lg font-semibold tracking-tight text-gray-900 hover:text-gray-700 whitespace-nowrap">
-                                MyShop
+                               Reloop
                             </a>
 
                             <div class="hidden lg:flex items-center gap-6">

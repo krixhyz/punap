@@ -98,17 +98,17 @@ class SwapRequestController extends Controller
         $swapRequest = SwapRequest::with(['requestedProduct', 'offeredProduct'])->findOrFail($swapRequestId);
 
         // Only owner of requested product can accept
-        if ($swapRequest->requestedProduct->user_id !== Auth::id()) {
+        if ($swapRequest->product->user_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
-        if ($swapRequest->status !== 'pending') {
+        if ($swapRequest->status !== 'requested') {
             return redirect()->route('dashboard')->with('error', 'Swap already processed.');
         }
 
         DB::transaction(function () use ($swapRequest) {
             // Decrement quantities (swap is 1 unit each)
-            $reqProduct = Product::lockForUpdate()->find($swapRequest->requested_product_id);
+            $reqProduct = Product::lockForUpdate()->find($swapRequest->product_id);
             $offProduct = Product::lockForUpdate()->find($swapRequest->offered_product_id);
 
             if ($reqProduct && $reqProduct->quantity > 0) {
@@ -133,15 +133,21 @@ class SwapRequestController extends Controller
             $swapRequest->status = 'accepted';
             $swapRequest->save();
 
-            // Create swap record if you have a Swap model
+            // Create swap record
             \App\Models\Swap::create([
-                'owner_a_id' => $swapRequest->requester_id,
-                'owner_b_id' => Auth::id(),
-                'requested_product_id' => $swapRequest->requested_product_id,
-                'offered_product_id' => $swapRequest->offered_product_id,
+                'swap_request_id' => $swapRequest->id,
+                'product_a_id' => $swapRequest->product_id,
+                'product_b_id' => $swapRequest->offered_product_id,
+                'owner_a_id' => $swapRequest->owner_id,
+                'owner_b_id' => $swapRequest->requester_id,
+                'offered_amount' => $swapRequest->offered_amount,
+                'notes' => $swapRequest->message,
                 'status' => 'completed',
             ]);
         });
+
+        // Notify the requester that their swap was accepted
+        $swapRequest->requester->notify(new SwapAccepted($swapRequest));
 
         return redirect()->route('dashboard')->with('success', 'Swap accepted successfully.');
     }
@@ -157,7 +163,17 @@ class SwapRequestController extends Controller
             abort(403);
         }
 
-        $swapRequest->delete();
+        if ($swapRequest->status !== 'requested') {
+            return redirect()->route('dashboard')->with('error', 'Swap already processed.');
+        }
+
+        // Update status to rejected
+        $swapRequest->status = 'rejected';
+        $swapRequest->save();
+
+        // Notify the requester that their swap was rejected
+        $swapRequest->requester->notify(new SwapRejected($swapRequest));
+
         return redirect()->route('dashboard')->with('info', 'Swap rejected.');
     }
     public function myHistory()

@@ -23,13 +23,22 @@ class Swap extends Model
     }
 
     public function requestedProduct()
-{
-    return $this->belongsTo(Product::class, 'product_a_id');
-}
+    {
+        return $this->belongsTo(Product::class, 'product_a_id');
+    }
 
-public function offeredProduct()
-{
-    return $this->belongsTo(Product::class, 'product_b_id');
-}
+    public function offeredProduct()
+    {
+        return $this->belongsTo(Product::class, 'product_b_id');
+    }
 
+    public function ownerA()
+    {
+        return $this->belongsTo(User::class, 'owner_a_id');
+    }
+
+    public function ownerB()
+    {
+        return $this->belongsTo(User::class, 'owner_b_id');
+    }
 }

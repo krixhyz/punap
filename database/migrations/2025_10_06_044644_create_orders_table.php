@@ -16,6 +16,9 @@ return new class extends Migration
     $table->foreignId('buyer_id')->constrained('users')->onDelete('cascade');
     $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
     $table->enum('transaction_type', ['buy', 'rent', 'swap']);
+    $table->integer('quantity')->default(1);
+    $table->decimal('unit_price', 10, 2)->default(0);
+    $table->decimal('total_price', 10, 2)->default(0);
     $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
     $table->timestamps();
 });

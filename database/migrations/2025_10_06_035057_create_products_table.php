@@ -16,6 +16,7 @@ return new class extends Migration
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
         $table->string('title');
         $table->text('description');
+        $table->boolean('flagged')->default(false);
         $table->decimal('price', 10, 2)->nullable();
         $table->integer('quantity')->default(1); // NEW: available units
         $table->json('type')->nullable(); // store as ["sell", "rent", "swap"]
@@ -27,6 +28,7 @@ return new class extends Migration
         $table->enum('status', ['available', 'swapped', 'sold', 'rented'])->default('available');
         $table->integer('rent_duration')->nullable(); // For rentals
         $table->string('location')->nullable(); // Optional
+     
 
         $table->timestamps();
     });
