@@ -2,62 +2,83 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin</title>
+    <title>Admin Panel</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50 text-gray-900">
-<div class="min-h-screen flex">
-    <aside class="w-64 bg-white/80 backdrop-blur border-r border-gray-200">
-        <div class="p-4">
-            <div class="flex items-center gap-2">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded bg-indigo-600 text-white font-bold">A</span>
-                <span class="font-semibold text-lg">Admin Panel</span>
+<body class="bg-[#f4f8fb] text-slate-900">
+@php
+    $adminUser = auth()->user();
+    $isSuper = $adminUser->isSuperAdmin();
+
+    $tabs = $isSuper
+        ? [
+            ['label' => 'Overview', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard']],
+            ['label' => 'User Management', 'route' => 'admin.users', 'active' => ['admin.users*']],
+            ['label' => 'Content Moderation', 'route' => 'admin.content', 'active' => ['admin.content*', 'admin.products*']],
+            ['label' => 'Transactions', 'route' => 'admin.transactions', 'active' => ['admin.transactions*']],
+            ['label' => 'Analytics', 'route' => 'admin.analytics', 'active' => ['admin.analytics*']],
+            ['label' => 'System Config', 'route' => 'admin.system.config', 'active' => ['admin.system.config*']],
+        ]
+        : [
+            ['label' => 'Overview', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard']],
+            ['label' => 'User Management', 'route' => 'admin.users', 'active' => ['admin.users*']],
+            ['label' => 'Content Moderation', 'route' => 'admin.content', 'active' => ['admin.content*', 'admin.products*']],
+            ['label' => 'Transactions', 'route' => 'admin.transactions', 'active' => ['admin.transactions*']],
+            ['label' => 'Disputes', 'route' => 'admin.disputes', 'active' => ['admin.disputes*']],
+            ['label' => 'Reports', 'route' => 'admin.reports', 'active' => ['admin.reports*']],
+        ];
+@endphp
+
+<div class="min-h-screen">
+    <header class="max-w-7xl mx-auto px-6 pt-6">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h1 class="text-4xl font-bold text-slate-900">{{ $isSuper ? 'Super Admin Dashboard' : 'Admin Dashboard' }}</h1>
+                <p class="text-slate-600 mt-2">{{ $isSuper ? 'Full platform oversight and control' : 'Operational moderation and user management' }}</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-6 py-3 rounded-xl text-white font-semibold {{ $isSuper ? 'bg-purple-600' : 'bg-blue-600' }}">
+                    {{ $isSuper ? 'Super Admin' : 'Admin' }}
+                </span>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm">Logout</button>
+                </form>
             </div>
         </div>
-        <nav class="px-3 space-y-1">
-            <a href="{{ route('admin.dashboard') }}"
-               class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('admin.dashboard') ? 'bg-gray-100 font-medium' : '' }}">
-                <span class="i"></span> <span>Dashboard</span>
-            </a>
-            <a href="{{ route('admin.users') }}"
-               class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('admin.users*') ? 'bg-gray-100 font-medium' : '' }}">
-                <span class="i"></span> <span>Users</span>
-            </a>
-            <a href="{{ route('admin.products') }}"
-               class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('admin.products*') ? 'bg-gray-100 font-medium' : '' }}">
-                <span class="i"></span> <span>Products</span>
-            </a>
-            <a href="{{ route('admin.disputes') }}"
-               class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('admin.disputes*') ? 'bg-gray-100 font-medium' : '' }}">
-                <span class="i"></span> <span>Disputes</span>
-            </a>
-            <a href="{{ route('admin.reviews') }}"
-               class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('admin.reviews*') ? 'bg-gray-100 font-medium' : '' }}">
-                <span class="i"></span> <span>Reviews</span>
-            </a>
-        </nav>
-    </aside>
 
-    <main class="flex-1">
-        <header class="bg-white border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                <h1 class="text-xl font-semibold">@yield('title', 'Admin')</h1>
-                <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-600">{{ auth()->user()->name }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="text-sm px-3 py-1 rounded bg-gray-900 text-white hover:bg-gray-800">Logout</button>
-                    </form>
-                </div>
+        <div class="mt-8 bg-white rounded-2xl border border-slate-200">
+            <nav class="px-4 py-1 flex flex-wrap gap-2">
+                @foreach($tabs as $tab)
+                    @php
+                        $isActive = false;
+                        foreach ($tab['active'] as $pattern) {
+                            if (request()->routeIs($pattern)) {
+                                $isActive = true;
+                                break;
+                            }
+                        }
+                    @endphp
+                    <a href="{{ route($tab['route']) }}"
+                       class="px-4 py-3 text-base border-b-2 {{ $isActive ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-slate-600 hover:text-slate-800' }}">
+                        {{ $tab['label'] }}
+                    </a>
+                @endforeach
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-6">
+        @if (session('success'))
+            <div class="mb-4 rounded-lg border border-green-200 bg-green-50 text-green-800 px-4 py-3">{{ session('success') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3">
+                {{ $errors->first() }}
             </div>
-        </header>
+        @endif
 
-        <section class="max-w-7xl mx-auto px-6 py-6">
-            @if (session('success'))
-                <div class="mb-4 rounded border border-green-200 bg-green-50 text-green-800 px-4 py-2">{{ session('success') }}</div>
-            @endif
-            @yield('content')
-        </section>
+        @yield('content')
     </main>
 </div>
 </body>

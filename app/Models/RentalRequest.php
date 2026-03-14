@@ -19,7 +19,14 @@ class RentalRequest extends Model
         'duration',
         'total_amount',
         'rent_deposit',
+        'stock_reserved',
+        'reserved_until',
         'status',
+    ];
+
+    protected $casts = [
+        'stock_reserved' => 'boolean',
+        'reserved_until' => 'datetime',
     ];
 
     /** Relationships **/

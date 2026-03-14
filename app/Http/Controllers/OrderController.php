@@ -6,11 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\InventoryReservationService;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    public function store(Request $request, $productId)
+    public function store(Request $request, $productId, InventoryReservationService $inventory)
     {
         // Validate quantity from form (defaults to 1)
         $validated = $request->validate([
@@ -27,23 +28,10 @@ class OrderController extends Controller
                 return back()->with('error', 'You cannot buy your own product.');
             }
 
-            if ($product->status === 'sold') {
-                return back()->with('error', 'This product is already sold.');
-            }
-
-            if ($product->quantity < 1) {
-                return back()->with('error', 'No available stock.');
-            }
-
-            $reservedQty = Order::where('product_id', $product->id)
-                ->where('status', 'pending')
-                ->where('reserved_until', '>', now())
-                ->sum('quantity');
-
-            $availableQty = $product->quantity - $reservedQty;
-
-            if ($availableQty < $requestedQty) {
-                return back()->with('error', 'Requested quantity exceeds available stock.');
+            try {
+                $inventory->ensurePurchasableQuantity($product, $requestedQty, now());
+            } catch (\RuntimeException $e) {
+                return back()->with('error', $e->getMessage());
             }
 
             $unitPrice = $product->price ?? 0;

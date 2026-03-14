@@ -9,6 +9,7 @@ use App\Notifications\SwapRequested;
 use App\Notifications\SwapRejected;
 use App\Notifications\SwapAccepted;
 use App\Notifications\SwapCountered;
+use App\Services\InventoryReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,11 @@ use App\Http\Middleware;
 
 class SwapRequestController extends Controller
 {
-    public function __construct()
+    private InventoryReservationService $inventory;
+
+    public function __construct(InventoryReservationService $inventory)
     {
+        $this->inventory = $inventory;
         $this->middleware('auth');
     }
 
@@ -284,30 +288,7 @@ class SwapRequestController extends Controller
 
         try {
             DB::transaction(function () use ($swapRequest, $offeredProductId, $offeredAmount, $notes) {
-                $reqProduct = Product::lockForUpdate()->find($swapRequest->product_id);
-                $offProduct = Product::lockForUpdate()->find($offeredProductId);
-
-                if (!$reqProduct || !$offProduct) {
-                    throw new \RuntimeException('Swap products are not available.');
-                }
-
-                if ($reqProduct->quantity < 1 || $offProduct->quantity < 1) {
-                    throw new \RuntimeException('Insufficient stock for swap.');
-                }
-
-                $reqProduct->quantity -= 1;
-                if ($reqProduct->quantity <= 0) {
-                    $reqProduct->quantity = 0;
-                    $reqProduct->status = 'swapped';
-                }
-                $reqProduct->save();
-
-                $offProduct->quantity -= 1;
-                if ($offProduct->quantity <= 0) {
-                    $offProduct->quantity = 0;
-                    $offProduct->status = 'swapped';
-                }
-                $offProduct->save();
+                $this->inventory->reserveSwapItems($swapRequest);
 
                 $swapRequest->status = 'accepted';
                 $swapRequest->offered_amount = $offeredAmount;
@@ -336,24 +317,7 @@ class SwapRequestController extends Controller
     private function reserveSwapItems(SwapRequest $swapRequest)
     {
         try {
-            DB::transaction(function () use ($swapRequest) {
-                $reqProduct = Product::lockForUpdate()->find($swapRequest->product_id);
-                $offProduct = Product::lockForUpdate()->find($swapRequest->offered_product_id);
-
-                if (!$reqProduct || !$offProduct) {
-                    throw new \RuntimeException('Swap products are not available.');
-                }
-
-                if ($reqProduct->quantity < 1 || $offProduct->quantity < 1) {
-                    throw new \RuntimeException('Insufficient stock for swap.');
-                }
-
-                $reqProduct->quantity -= 1;
-                $reqProduct->save();
-
-                $offProduct->quantity -= 1;
-                $offProduct->save();
-            });
+            $this->inventory->reserveSwapItems($swapRequest);
         } catch (\RuntimeException $e) {
             return $e->getMessage();
         }
@@ -363,24 +327,7 @@ class SwapRequestController extends Controller
 
     private function releaseSwapReservation(SwapRequest $swapRequest)
     {
-        DB::transaction(function () use ($swapRequest) {
-            $reqProduct = Product::lockForUpdate()->find($swapRequest->product_id);
-            $offProduct = Product::lockForUpdate()->find($swapRequest->offered_product_id);
-
-            if ($reqProduct) {
-                $reqProduct->quantity += 1;
-                $reqProduct->save();
-            }
-
-            if ($offProduct) {
-                $offProduct->quantity += 1;
-                $offProduct->save();
-            }
-
-            $swapRequest->status = 'cancelled';
-            $swapRequest->reserved_until = null;
-            $swapRequest->save();
-        });
+        $this->inventory->releaseSwapReservation($swapRequest);
     }
     /**
      * Requester cancels their own swap request (only while requested or countered).

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\SwapRequestController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 
@@ -156,8 +157,6 @@ Route::middleware('auth')->group(function () {
 
 
 
-use App\Http\Controllers\SwapRequestController;
-
 Route::middleware(['auth'])->group(function () {
     // Show request form
     Route::post('/swap/request/{product}', [SwapRequestController::class, 'showRequestForm'])
@@ -205,18 +204,33 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::post('/users', [AdminController::class, 'userStore'])->middleware('super_admin')->name('users.store');
     Route::get('/users/{id}', [AdminController::class, 'userShow'])->name('users.show');
     Route::put('/users/{user}', [AdminController::class, 'userUpdate'])->name('users.update');
     Route::delete('/users/{user}', [AdminController::class, 'userDelete'])->name('users.delete');
+    Route::patch('/users/{user}/status', [AdminController::class, 'userStatus'])->name('users.status');
+    Route::post('/users/{user}/reset-password', [AdminController::class, 'userResetPassword'])->name('users.resetPassword');
 
     Route::get('/products', [AdminController::class, 'products'])->name('products');
     Route::patch('/products/{product}/flag', [AdminController::class, 'productFlag'])->name('products.flag');
     Route::patch('/products/{product}/unflag', [AdminController::class, 'productUnflag'])->name('products.unflag');
     Route::delete('/products/{product}', [AdminController::class, 'productDelete'])->name('products.delete');
 
+    Route::get('/content-moderation', [AdminController::class, 'contentModeration'])->name('content');
+    Route::patch('/content-moderation/{product}/decision', [AdminController::class, 'contentDecision'])->name('content.decision');
+    Route::post('/content-moderation/bulk-unflag', [AdminController::class, 'contentBulkUnflag'])->name('content.bulkUnflag');
+    Route::post('/content-moderation/bulk-delete', [AdminController::class, 'contentBulkDelete'])->middleware('super_admin')->name('content.bulkDelete');
+
+    Route::get('/transactions', [AdminController::class, 'transactions'])->name('transactions');
+    Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    Route::get('/analytics', [AdminController::class, 'analytics'])->middleware('super_admin')->name('analytics');
+    Route::get('/system-config', [AdminController::class, 'systemConfig'])->middleware('super_admin')->name('system.config');
+    Route::post('/system-config', [AdminController::class, 'systemConfigUpdate'])->middleware('super_admin')->name('system.config.update');
+
     // Disputes
     Route::get('/disputes', [AdminController::class, 'disputes'])->name('disputes');
     Route::get('/disputes/{dispute}', [AdminController::class, 'disputeShow'])->name('disputes.show');
+    Route::patch('/disputes/{dispute}/escalate', [AdminController::class, 'disputeEscalate'])->name('disputes.escalate');
     Route::patch('/disputes/{dispute}/resolve', [AdminController::class, 'disputeResolve'])->name('disputes.resolve');
 
     // Reviews (read-only)

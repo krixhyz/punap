@@ -22,6 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'account_status',
+        'status_notes',
     ];
 
     /**
@@ -127,8 +129,55 @@ public function recentlyViewed()
 
 public function isAdmin(): bool
 {
-    // Adjust this condition to match how "admin" is stored in your DB
-    return $this->role === 'admin';
+    return in_array($this->role, ['admin', 'super_admin'], true);
+}
+
+public function isSuperAdmin(): bool
+{
+    return $this->role === 'super_admin';
+}
+
+public function canAccessAdminPanel(): bool
+{
+    return $this->isAdmin();
+}
+
+public function canManageRoles(): bool
+{
+    return $this->isSuperAdmin();
+}
+
+public function canAccessSensitiveAdminData(): bool
+{
+    return $this->isSuperAdmin();
+}
+
+public function canConfigureSystem(): bool
+{
+    return $this->isSuperAdmin();
+}
+
+public function canManageUser(User $target): bool
+{
+    if ($this->isSuperAdmin()) {
+        return true;
+    }
+
+    if (! $this->isAdmin()) {
+        return false;
+    }
+
+    return $target->role === 'user';
+}
+
+public function isSuspended(): bool
+{
+    return $this->account_status === 'suspended';
+}
+
+public function isBanned(): bool
+{
+    return $this->account_status === 'banned';
 }
 
 

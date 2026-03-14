@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\RentalRequest;
 use App\Models\RentedRentals;
+use App\Services\InventoryReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,7 @@ class RentalController extends Controller
     /**
      * Checkout screen for renter.
      */
-    public function checkout(RentalRequest $rentalRequest)
+    public function checkout(RentalRequest $rentalRequest, InventoryReservationService $inventory)
     {
         if ($rentalRequest->renter_id != Auth::id()) {
             abort(403);
@@ -103,6 +104,11 @@ class RentalController extends Controller
 
         if ($rentalRequest->status !== 'approved') {
             return redirect()->route('products.index')->with('error', 'Rental request is not approved yet.');
+        }
+
+        if ($rentalRequest->reserved_until && $rentalRequest->reserved_until->isPast()) {
+            $inventory->releaseRentalReservation($rentalRequest);
+            return redirect()->route('products.index')->with('error', 'Rental reservation expired. Please request again.');
         }
 
         return view('rental.checkout', compact('rentalRequest'));
@@ -111,7 +117,7 @@ class RentalController extends Controller
     /**
      * Payment page for approved rental.
      */
-    public function payment(RentalRequest $rentalRequest)
+    public function payment(RentalRequest $rentalRequest, InventoryReservationService $inventory)
     {
         if ($rentalRequest->renter_id != Auth::id()) {
             abort(403);
@@ -119,6 +125,11 @@ class RentalController extends Controller
 
         if ($rentalRequest->status !== 'approved') {
             return redirect()->route('products.index')->with('error', 'Rental request is not approved yet.');
+        }
+
+        if ($rentalRequest->reserved_until && $rentalRequest->reserved_until->isPast()) {
+            $inventory->releaseRentalReservation($rentalRequest);
+            return redirect()->route('products.index')->with('error', 'Rental reservation expired. Please request again.');
         }
 
         return view('rental.payment', compact('rentalRequest'));
@@ -153,20 +164,18 @@ class RentalController extends Controller
      * Approve rental request → move to rented_rentals.
      */
 
-    public function approveRequest(RentalRequest $rentalRequest)
+    public function approveRequest(RentalRequest $rentalRequest, InventoryReservationService $inventory)
     {
         // Ensure only owner can approve
         if ($rentalRequest->owner_id != Auth::id()) {
             abort(403, 'Unauthorized');
         }
 
-        // Prevent double approval
-        if ($rentalRequest->status !== 'requested') {
-            return back()->with('error', 'This request has already been processed.');
+        try {
+            $inventory->reserveRentalRequest($rentalRequest, (int) config('esewa.reservation_minutes'));
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $rentalRequest->status = 'approved';
-        $rentalRequest->save();
 
         $rentalRequest->renter->notify(new RentalApprovedNotification($rentalRequest));
 
@@ -201,17 +210,22 @@ class RentalController extends Controller
     /**
      * Renter cancels their own pending rental request.
      */
-    public function cancelRequest(RentalRequest $rentalRequest)
+    public function cancelRequest(RentalRequest $rentalRequest, InventoryReservationService $inventory)
     {
         if ($rentalRequest->renter_id !== Auth::id()) {
             abort(403);
         }
 
-        if ($rentalRequest->status !== 'requested') {
-            return back()->with('error', 'Only pending rental requests can be cancelled.');
+        if (!in_array($rentalRequest->status, ['requested', 'approved'], true)) {
+            return back()->with('error', 'Only pending or approved rental requests can be cancelled.');
         }
 
-        $rentalRequest->delete();
+        if ($rentalRequest->status === 'approved') {
+            $inventory->releaseRentalReservation($rentalRequest);
+        } else {
+            $rentalRequest->status = 'cancelled';
+            $rentalRequest->save();
+        }
 
         return redirect()->route('products.myPurchases')->with('success', 'Rental request cancelled.');
     }
