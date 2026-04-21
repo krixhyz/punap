@@ -5,6 +5,6 @@
     "buildCommand": "rm -f bootstrap/cache/*.php && composer install --no-dev --optimize-autoloader --no-scripts && php artisan package:discover --ansi && npm install && npm run build"
   },
   "deploy": {
-    "startCommand": "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link && php -S 0.0.0.0:$PORT -t public"
+    "startCommand": "php artisan migrate --force && if [ ! -f storage/app/current-db.seeded ]; then php artisan db:seed --force && touch storage/app/current-db.seeded; fi && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link && php -S 0.0.0.0:$PORT -t public"
   }
 }

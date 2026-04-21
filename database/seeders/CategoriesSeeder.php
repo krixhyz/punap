@@ -9,99 +9,54 @@ class CategoriesSeeder extends Seeder
 {
     public function run(): void
     {
-        // Parent Categories
-        $clothing_id = Category::create([
-            'name' => 'Clothing',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $upsert = function (string $name, ?int $parentId, float $baseCo2Kg, float $reusePct, float $ecoPoints): Category {
+            return Category::query()->updateOrCreate(
+                ['name' => $name, 'parent_id' => $parentId],
+                [
+                    'base_co2_kg' => $baseCo2Kg,
+                    'reuse_pct' => $reusePct,
+                    'eco_points' => $ecoPoints,
+                ]
+            );
+        };
 
-        $electronics_id = Category::create([
-            'name' => 'Electronics',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $clothing = $upsert('Clothing', null, 0, 0, 0);
+        $electronics = $upsert('Electronics', null, 0, 0, 0);
+        $furniture = $upsert('Furniture', null, 0, 0, 0);
+        $books = $upsert('Books', null, 0, 0, 0);
+        $toys = $upsert('Toys & Games', null, 0, 0, 0);
+        $appliances = $upsert('Home Appliances', null, 0, 0, 0);
+        $sports = $upsert('Sports Equipment', null, 0, 0, 0);
 
-        $furniture_id = Category::create([
-            'name' => 'Furniture',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $upsert('Tops & T-Shirts', $clothing->id, 7.00, 75, 5.25);
+        $upsert('Jeans & Trousers', $clothing->id, 30.00, 75, 22.50);
+        $upsert('Jackets & Coats', $clothing->id, 25.00, 75, 18.75);
+        $upsert('Dresses & Skirts', $clothing->id, 15.00, 75, 11.25);
+        $upsert('Shoes', $clothing->id, 14.00, 75, 10.50);
 
-        $books_id = Category::create([
-            'name' => 'Books',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $upsert('Smartphones', $electronics->id, 60.00, 70, 42.00);
+        $upsert('Tablets', $electronics->id, 110.00, 70, 77.00);
+        $upsert('Laptops', $electronics->id, 270.00, 80, 216.00);
+        $upsert('Desktop PCs', $electronics->id, 300.00, 80, 240.00);
+        $upsert('Cameras', $electronics->id, 80.00, 75, 60.00);
 
-        $toys_id = Category::create([
-            'name' => 'Toys & Games',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $upsert('Chairs', $furniture->id, 16.00, 82, 13.10);
+        $upsert('Tables & Desks', $furniture->id, 70.00, 82, 57.40);
+        $upsert('Sofas & Couches', $furniture->id, 105.00, 82, 86.10);
+        $upsert('Storage & Shelving', $furniture->id, 50.00, 82, 41.00);
 
-        $appliances_id = Category::create([
-            'name' => 'Home Appliances',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $upsert('Books', $books->id, 5.00, 87, 4.35);
 
-        $sports_id = Category::create([
-            'name' => 'Sports Equipment',
-            'parent_id' => null,
-            'base_co2_kg' => 0,
-            'reuse_pct' => 0,
-            'eco_points' => 0,
-        ])->id;
+        $upsert('Plastic Toys', $toys->id, 6.00, 75, 4.50);
+        $upsert('Wooden Toys', $toys->id, 3.00, 80, 2.40);
+        $upsert('Board Games', $toys->id, 3.00, 80, 2.40);
 
-        // Clothing Subcategories
-        Category::create(['name' => 'Tops & T-Shirts', 'parent_id' => $clothing_id, 'base_co2_kg' => 7.00, 'reuse_pct' => 75, 'eco_points' => 5.25]);
-        Category::create(['name' => 'Jeans & Trousers', 'parent_id' => $clothing_id, 'base_co2_kg' => 30.00, 'reuse_pct' => 75, 'eco_points' => 22.50]);
-        Category::create(['name' => 'Jackets & Coats', 'parent_id' => $clothing_id, 'base_co2_kg' => 25.00, 'reuse_pct' => 75, 'eco_points' => 18.75]);
-        Category::create(['name' => 'Dresses & Skirts', 'parent_id' => $clothing_id, 'base_co2_kg' => 15.00, 'reuse_pct' => 75, 'eco_points' => 11.25]);
-        Category::create(['name' => 'Shoes', 'parent_id' => $clothing_id, 'base_co2_kg' => 14.00, 'reuse_pct' => 75, 'eco_points' => 10.50]);
+        $upsert('Washing Machines', $appliances->id, 350.00, 25, 87.50);
+        $upsert('Refrigerators', $appliances->id, 350.00, 25, 87.50);
+        $upsert('Microwaves', $appliances->id, 80.00, 25, 20.00);
 
-        // Electronics Subcategories
-        Category::create(['name' => 'Smartphones', 'parent_id' => $electronics_id, 'base_co2_kg' => 60.00, 'reuse_pct' => 70, 'eco_points' => 42.00]);
-        Category::create(['name' => 'Tablets', 'parent_id' => $electronics_id, 'base_co2_kg' => 110.00, 'reuse_pct' => 70, 'eco_points' => 77.00]);
-        Category::create(['name' => 'Laptops', 'parent_id' => $electronics_id, 'base_co2_kg' => 270.00, 'reuse_pct' => 80, 'eco_points' => 216.00]);
-        Category::create(['name' => 'Desktop PCs', 'parent_id' => $electronics_id, 'base_co2_kg' => 300.00, 'reuse_pct' => 80, 'eco_points' => 240.00]);
-        Category::create(['name' => 'Cameras', 'parent_id' => $electronics_id, 'base_co2_kg' => 80.00, 'reuse_pct' => 75, 'eco_points' => 60.00]);
-
-        // Furniture Subcategories
-        Category::create(['name' => 'Chairs', 'parent_id' => $furniture_id, 'base_co2_kg' => 16.00, 'reuse_pct' => 82, 'eco_points' => 13.10]);
-        Category::create(['name' => 'Tables & Desks', 'parent_id' => $furniture_id, 'base_co2_kg' => 70.00, 'reuse_pct' => 82, 'eco_points' => 57.40]);
-        Category::create(['name' => 'Sofas & Couches', 'parent_id' => $furniture_id, 'base_co2_kg' => 105.00, 'reuse_pct' => 82, 'eco_points' => 86.10]);
-        Category::create(['name' => 'Storage & Shelving', 'parent_id' => $furniture_id, 'base_co2_kg' => 50.00, 'reuse_pct' => 82, 'eco_points' => 41.00]);
-
-        // Books Subcategories
-        Category::create(['name' => 'Books', 'parent_id' => $books_id, 'base_co2_kg' => 5.00, 'reuse_pct' => 87, 'eco_points' => 4.35]);
-
-        // Toys & Games Subcategories
-        Category::create(['name' => 'Plastic Toys', 'parent_id' => $toys_id, 'base_co2_kg' => 6.00, 'reuse_pct' => 75, 'eco_points' => 4.50]);
-        Category::create(['name' => 'Wooden Toys', 'parent_id' => $toys_id, 'base_co2_kg' => 3.00, 'reuse_pct' => 80, 'eco_points' => 2.40]);
-        Category::create(['name' => 'Board Games', 'parent_id' => $toys_id, 'base_co2_kg' => 3.00, 'reuse_pct' => 80, 'eco_points' => 2.40]);
-
-        // Home Appliances Subcategories
-        Category::create(['name' => 'Washing Machines', 'parent_id' => $appliances_id, 'base_co2_kg' => 350.00, 'reuse_pct' => 25, 'eco_points' => 87.50]);
-        Category::create(['name' => 'Refrigerators', 'parent_id' => $appliances_id, 'base_co2_kg' => 350.00, 'reuse_pct' => 25, 'eco_points' => 87.50]);
-        Category::create(['name' => 'Microwaves', 'parent_id' => $appliances_id, 'base_co2_kg' => 80.00, 'reuse_pct' => 25, 'eco_points' => 20.00]);
-
-        // Sports Equipment Subcategories
-        Category::create(['name' => 'Bicycles', 'parent_id' => $sports_id, 'base_co2_kg' => 95.00, 'reuse_pct' => 80, 'eco_points' => 76.00]);
-        Category::create(['name' => 'Gym Equipment', 'parent_id' => $sports_id, 'base_co2_kg' => 10.00, 'reuse_pct' => 75, 'eco_points' => 7.50]);
-        Category::create(['name' => 'Outdoor Gear', 'parent_id' => $sports_id, 'base_co2_kg' => 8.00, 'reuse_pct' => 75, 'eco_points' => 6.00]);
+        $upsert('Bicycles', $sports->id, 95.00, 80, 76.00);
+        $upsert('Gym Equipment', $sports->id, 10.00, 75, 7.50);
+        $upsert('Outdoor Gear', $sports->id, 8.00, 75, 6.00);
     }
 }
