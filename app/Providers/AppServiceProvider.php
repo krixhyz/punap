@@ -16,6 +16,7 @@ use App\Policies\SwapRequestPolicy;
 use App\Observers\ReviewObserver;
 use App\Observers\DisputeObserver;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,5 +40,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RentalRequest::class, RentalRequestPolicy::class);
         Gate::policy(RentedRentals::class, RentedRentalPolicy::class);
         Gate::policy(SwapRequest::class, SwapRequestPolicy::class);
+       
+        if (app()->environment('production')) {
+        URL::forceScheme('https');
     }
+    }
+
+ 
 }
