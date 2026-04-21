@@ -29,23 +29,16 @@
                     </a>
                 @endif
 
-                <div class="relative" x-data="{ openUser: false }" @click.outside="openUser = false">
-                    <button @click="openUser = !openUser" type="button" class="inline-flex items-center gap-2 rounded-full border border-[rgba(189,202,189,0.6)] px-3 py-1.5 font-space text-xs font-semibold uppercase tracking-wider text-[#1a1c1c] transition-colors hover:border-[#006a38] hover:text-[#006a38]" aria-haspopup="true" :aria-expanded="openUser.toString()">
+                <div class="relative" data-navbar-dropdown="user">
+                    <button type="button" data-navbar-dropdown-toggle="user" class="inline-flex items-center gap-2 rounded-full border border-[rgba(189,202,189,0.6)] px-3 py-1.5 font-space text-xs font-semibold uppercase tracking-wider text-[#1a1c1c] transition-colors hover:border-[#006a38] hover:text-[#006a38]" aria-haspopup="true" aria-expanded="false">
                         <span>{{ $displayName }}</span>
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                         </svg>
                     </button>
 
-                    <div x-show="openUser"
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 -translate-y-1"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 -translate-y-1"
-                         class="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-[rgba(189,202,189,0.45)] bg-white p-2 shadow-[0_22px_40px_rgba(26,28,28,0.1)]"
-                         style="display: none;">
+                    <div data-navbar-dropdown-panel="user"
+                         class="hidden absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-[rgba(189,202,189,0.45)] bg-white p-2 shadow-[0_22px_40px_rgba(26,28,28,0.1)]">
                         <a href="{{ $isAdminUser ? route('admin.dashboard') : route('dashboard') }}" class="block rounded-lg px-3 py-2 font-space text-xs font-semibold uppercase tracking-wider text-[#1a1c1c] transition-colors hover:bg-[#eff5f0] hover:text-[#006a38]">Dashboard</a>
                         <a href="{{ $isAdminUser ? route('admin.profile.edit') : route('profile.edit') }}" class="block rounded-lg px-3 py-2 font-space text-xs font-semibold uppercase tracking-wider text-[#1a1c1c] transition-colors hover:bg-[#eff5f0] hover:text-[#006a38]">Profile Settings</a>
                         <form method="POST" action="{{ route('logout') }}" class="mt-1">
@@ -63,8 +56,8 @@
                     </a>
                 @endif
 
-                <div class="relative" x-data="{ openNotifs: false }" @click.outside="openNotifs = false">
-                    <button @click="openNotifs = !openNotifs" type="button" class="relative rounded-full p-2 text-[#444746] transition-colors hover:bg-[#ecf3ee] hover:text-[#006a38]" title="Notifications" aria-label="Open notifications" aria-haspopup="true" :aria-expanded="openNotifs.toString()">
+                <div class="relative" data-navbar-dropdown="notifs">
+                    <button type="button" data-navbar-dropdown-toggle="notifs" class="relative rounded-full p-2 text-[#444746] transition-colors hover:bg-[#ecf3ee] hover:text-[#006a38]" title="Notifications" aria-label="Open notifications" aria-haspopup="true" aria-expanded="false">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
                         </svg>
@@ -73,15 +66,8 @@
                         </span>
                     </button>
 
-                    <div x-show="openNotifs"
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 -translate-y-1"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 -translate-y-1"
-                         class="absolute right-0 top-full z-50 mt-2 w-[21rem] overflow-hidden rounded-xl border border-[rgba(189,202,189,0.45)] bg-white shadow-[0_22px_40px_rgba(26,28,28,0.1)]"
-                         style="display: none;">
+                    <div data-navbar-dropdown-panel="notifs"
+                         class="hidden absolute right-0 top-full z-50 mt-2 w-[21rem] overflow-hidden rounded-xl border border-[rgba(189,202,189,0.45)] bg-white shadow-[0_22px_40px_rgba(26,28,28,0.1)]">
                         <div class="border-b border-[rgba(189,202,189,0.25)] bg-[#f6faf7] p-3">
                             <p class="font-space text-[11px] font-bold uppercase tracking-[0.18em] text-[#444746]">Notifications</p>
                         </div>
@@ -204,6 +190,70 @@
     </div>
 
     <script>
+        (function setupNavbarDropdowns() {
+            const dropdowns = Array.from(document.querySelectorAll('[data-navbar-dropdown]'));
+
+            if (!dropdowns.length) {
+                return;
+            }
+
+            const closeAll = () => {
+                dropdowns.forEach((dropdown) => {
+                    const toggle = dropdown.querySelector('[data-navbar-dropdown-toggle]');
+                    const panel = dropdown.querySelector('[data-navbar-dropdown-panel]');
+
+                    if (toggle) {
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }
+
+                    if (panel) {
+                        panel.classList.add('hidden');
+                    }
+                });
+            };
+
+            const toggleDropdown = (name) => {
+                const dropdown = document.querySelector(`[data-navbar-dropdown="${name}"]`);
+                if (!dropdown) return;
+
+                const toggle = dropdown.querySelector('[data-navbar-dropdown-toggle]');
+                const panel = dropdown.querySelector('[data-navbar-dropdown-panel]');
+                if (!toggle || !panel) return;
+
+                const willOpen = panel.classList.contains('hidden');
+                closeAll();
+
+                if (willOpen) {
+                    panel.classList.remove('hidden');
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            };
+
+            dropdowns.forEach((dropdown) => {
+                const name = dropdown.getAttribute('data-navbar-dropdown');
+                const toggle = dropdown.querySelector('[data-navbar-dropdown-toggle]');
+
+                if (!name || !toggle) return;
+
+                toggle.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    toggleDropdown(name);
+                });
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('[data-navbar-dropdown]')) {
+                    closeAll();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeAll();
+                }
+            });
+        })();
+
         function handleDropdownNotifClick(el) {
             const id = el.dataset.id;
             const url = el.dataset.url;
