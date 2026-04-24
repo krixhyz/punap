@@ -360,13 +360,32 @@
                     </form>
                     @endif
 
-                    <form method="POST" action="{{ route('admin.products.delete', $product) }}" onsubmit="return confirm('Are you sure? This action cannot be undone.');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn-pill w-full justify-center !border-red-600 !text-red-600 hover:!bg-red-600 hover:!text-white">
-                            Delete Product
+                    @if($canDelete)
+                        <form method="POST" action="{{ route('admin.products.delete', $product) }}" onsubmit="return confirm('Are you sure? This action cannot be undone.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-pill w-full justify-center !border-red-600 !text-red-600 hover:!bg-red-600 hover:!text-white">
+                                Delete Product
+                            </button>
+                        </form>
+                    @else
+                        <button type="button" class="btn-pill w-full justify-center !border-neutral-400 !text-neutral-400 cursor-not-allowed" title="{{ $deleteBlockerMessage }}" disabled>
+                            Locked
                         </button>
-                    </form>
+                        <p class="text-xs text-red-600">{{ $deleteBlockerMessage }}</p>
+
+                        @if($canForceDelete)
+                            <form method="POST" action="{{ route('admin.products.forceDelete', $product) }}" onsubmit="return confirm('Force delete this product? This bypasses safety guards and cannot be undone.');" class="space-y-2 border border-red-300 bg-red-50 p-3">
+                                @csrf
+                                @method('DELETE')
+                                <label for="force-delete-reason" class="block text-xs font-semibold text-red-700">Force-delete reason (required)</label>
+                                <textarea id="force-delete-reason" name="reason" rows="3" minlength="10" maxlength="500" required class="w-full border border-red-300 bg-white px-2 py-1 text-sm" placeholder="Explain why this guarded product must be force-deleted."></textarea>
+                                <button type="submit" class="btn-pill w-full justify-center !border-red-700 !text-red-700 hover:!bg-red-700 hover:!text-white">
+                                    Force Delete (Super Admin)
+                                </button>
+                            </form>
+                        @endif
+                    @endif
 
                     <a href="{{ route('admin.users.show', $product->user) }}" class="btn-pill btn-pill-soft w-full justify-center text-center">
                         View Seller

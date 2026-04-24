@@ -55,13 +55,23 @@
                                 </form>
                                 @endif
                                 <a href="{{ route('admin.products.show', $product) }}" class="btn-pill !px-3 !py-1 text-xs !border-[#0066cc] !text-[#0066cc] hover:!bg-[#0066cc] hover:!text-white">View</a>
-                                <form method="POST" action="{{ route('admin.products.delete', $product) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn-pill !px-3 !py-1 text-xs !border-[#ba1a1a] !text-[#ba1a1a] hover:!bg-[#ba1a1a] hover:!text-white"
-                                            onclick="return confirm('Delete product?')">Delete</button>
-                                </form>
+                                @if(($canDeleteByProduct[$product->id] ?? true) === true)
+                                    <form method="POST" action="{{ route('admin.products.delete', $product) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn-pill !px-3 !py-1 text-xs !border-[#ba1a1a] !text-[#ba1a1a] hover:!bg-[#ba1a1a] hover:!text-white"
+                                                onclick="return confirm('Delete product?')">Delete</button>
+                                    </form>
+                                @else
+                                    <button type="button"
+                                            class="btn-pill !px-3 !py-1 text-xs !border-neutral-400 !text-neutral-400 cursor-not-allowed"
+                                            title="{{ $deleteBlockersByProduct[$product->id] ?? 'Active obligations prevent deletion.' }}"
+                                            disabled>Locked</button>
+                                @endif
                             </div>
+                            @if(($canDeleteByProduct[$product->id] ?? true) === false)
+                                <p class="mt-2 text-xs text-[#ba1a1a]">{{ $deleteBlockersByProduct[$product->id] }}</p>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

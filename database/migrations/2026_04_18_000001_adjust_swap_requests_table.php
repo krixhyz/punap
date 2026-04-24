@@ -26,9 +26,12 @@ return new class extends Migration
         });
 
         // Update status enum to include new states
-        DB::statement(
-            "ALTER TABLE swap_requests MODIFY status ENUM('requested', 'countered', 'awaiting_payment', 'paid', 'confirmation_pending', 'completed', 'rejected', 'cancelled', 'expired') DEFAULT 'requested'"
-        );
+        $driver = Schema::getConnection()->getDriverName();
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            DB::statement(
+                "ALTER TABLE swap_requests MODIFY status ENUM('requested', 'countered', 'awaiting_payment', 'paid', 'confirmation_pending', 'completed', 'rejected', 'cancelled', 'expired') DEFAULT 'requested'"
+            );
+        }
     }
 
     /**
@@ -37,9 +40,12 @@ return new class extends Migration
     public function down(): void
     {
         // Reset status enum
-        DB::statement(
-            "ALTER TABLE swap_requests MODIFY status ENUM('requested', 'countered', 'awaiting_payment', 'accepted', 'rejected', 'cancelled') DEFAULT 'requested'"
-        );
+        $driver = Schema::getConnection()->getDriverName();
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            DB::statement(
+                "ALTER TABLE swap_requests MODIFY status ENUM('requested', 'countered', 'awaiting_payment', 'accepted', 'rejected', 'cancelled') DEFAULT 'requested'"
+            );
+        }
 
         Schema::table('swap_requests', function (Blueprint $table) {
             if (Schema::hasColumn('swap_requests', 'asking_amount')) {

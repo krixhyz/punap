@@ -177,12 +177,21 @@
                         <!-- Actions -->
                         <div class="flex gap-2">
                             <a href="{{ route('products.edit', $product->id) }}" class="flex-1 bg-[#006a38] text-white px-4 py-2 font-space text-[10px] font-bold uppercase text-center rounded hover:bg-[#004a29] transition-all">Edit</a>
-                            <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="flex-1" onsubmit="return confirm('Delete this listing?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full bg-[#f9f9f9] border border-[#ba1a1a] text-[#ba1a1a] px-3 py-2 font-space text-[10px] font-bold uppercase rounded hover:bg-[rgba(186,26,26,0.06)] transition-all">Delete</button>
-                            </form>
+                            @if(($canDeleteByProduct[$product->id] ?? true) === true)
+                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="flex-1" onsubmit="return confirm('Delete this listing?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full bg-[#f9f9f9] border border-[#ba1a1a] text-[#ba1a1a] px-3 py-2 font-space text-[10px] font-bold uppercase rounded hover:bg-[rgba(186,26,26,0.06)] transition-all">Delete</button>
+                                </form>
+                            @else
+                                <button type="button" class="flex-1 w-full bg-[#f3f3f3] border border-[#b7b7b7] text-[#888] px-3 py-2 font-space text-[10px] font-bold uppercase rounded cursor-not-allowed" title="{{ $deleteBlockersByProduct[$product->id] ?? 'This listing has active obligations and cannot be deleted.' }}" disabled>
+                                    Locked
+                                </button>
+                            @endif
                         </div>
+                        @if(($canDeleteByProduct[$product->id] ?? true) === false)
+                            <p class="mt-3 text-[11px] text-[#ba1a1a] leading-snug">{{ $deleteBlockersByProduct[$product->id] }}</p>
+                        @endif
                     </div>
                 </div>
             @endforeach

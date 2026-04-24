@@ -15,6 +15,7 @@ use App\Models\Swap;
 use App\Models\SwapRequest;
 use App\Models\User\User;
 use App\Notifications\User\DisputeStatusUpdated;
+use App\Services\ProductDeletionGuardService;
 use App\Services\RentalDepositRefundService;
 use App\Services\WalletLedgerService;
 use Illuminate\Http\Request;
@@ -434,13 +435,22 @@ class AdminController extends Controller
             ->with('success', 'User profile verification has been revoked.');
     }
 
-    public function products()
+    public function products(ProductDeletionGuardService $deletionGuard)
     {
         $products = Product::with('user')->latest()->paginate(15);
-        return view('admin.products.index', compact('products'));
+
+        $canDeleteByProduct = [];
+        $deleteBlockersByProduct = [];
+        foreach ($products as $product) {
+            $blockerMessage = $deletionGuard->blockerMessage($product);
+            $canDeleteByProduct[$product->id] = $blockerMessage === '';
+            $deleteBlockersByProduct[$product->id] = $blockerMessage;
+        }
+
+        return view('admin.products.index', compact('products', 'canDeleteByProduct', 'deleteBlockersByProduct'));
     }
 
-    public function productShow(Product $product)
+    public function productShow(Product $product, ProductDeletionGuardService $deletionGuard)
     {
         $product->load(['user', 'rentals', 'orders' => function ($q) {
             $q->where('transaction_type', 'buy');
@@ -488,7 +498,11 @@ class AdminController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.products.show', compact('product', 'reviews', 'disputes', 'rentalRequests', 'swapRequests'));
+        $deleteBlockerMessage = $deletionGuard->blockerMessage($product);
+        $canDelete = $deleteBlockerMessage === '';
+        $canForceDelete = auth()->user()?->isSuperAdmin() === true;
+
+        return view('admin.products.show', compact('product', 'reviews', 'disputes', 'rentalRequests', 'swapRequests', 'canDelete', 'deleteBlockerMessage', 'canForceDelete'));
     }
 
     public function productFlag(Product $product)
@@ -621,7 +635,7 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Selected listings restored.');
     }
 
-    public function contentBulkDelete(Request $request)
+    public function contentBulkDelete(Request $request, ProductDeletionGuardService $deletionGuard)
     {
         if (! auth()->user()->isSuperAdmin()) {
             abort(403, 'Super admin only action.');
@@ -632,15 +646,48 @@ class AdminController extends Controller
             'product_ids.*' => 'integer|exists:products,id',
         ]);
 
-        Product::whereIn('id', $data['product_ids'])->delete();
+        $products = Product::whereIn('id', $data['product_ids'])->get();
 
-        return redirect()->back()->with('success', 'Selected listings deleted.');
+        $deletableIds = [];
+        $blockedProducts = [];
+
+        foreach ($products as $product) {
+            $blockers = $deletionGuard->getBlockers($product);
+
+            if ($blockers === []) {
+                $deletableIds[] = $product->id;
+                continue;
+            }
+
+            $blockedProducts[] = '#' . $product->id . ' (' . $product->title . '): ' . implode(', ', $blockers);
+        }
+
+        $deletedCount = 0;
+        if ($deletableIds !== []) {
+            $deletedCount = Product::whereIn('id', $deletableIds)->delete();
+        }
+
+        if ($blockedProducts === []) {
+            return redirect()->back()->with('success', "Selected listings deleted ({$deletedCount}).");
+        }
+
+        $blockedPreview = implode(' | ', array_slice($blockedProducts, 0, 3));
+        $blockedCount = count($blockedProducts);
+
+        return redirect()->back()
+            ->with('success', "Deleted {$deletedCount} listing(s).")
+            ->with('error', "Skipped {$blockedCount} listing(s) with active obligations: {$blockedPreview}");
     }
 
-    public function productDelete($id)
+    public function productDelete($id, ProductDeletionGuardService $deletionGuard)
     {
         $product = Product::findOrFail($id);
         $admin = auth()->user();
+
+        $blockerMessage = $deletionGuard->blockerMessage($product);
+        if ($blockerMessage !== '') {
+            return redirect()->back()->with('error', $blockerMessage);
+        }
         
         // Log deletion for audit trail
         \Log::warning('Product deletion by admin', [
@@ -654,6 +701,37 @@ class AdminController extends Controller
         
         $product->delete();
         return redirect()->route('admin.products')->with('success', 'Product deleted successfully');
+    }
+
+    public function productForceDelete(Request $request, Product $product, ProductDeletionGuardService $deletionGuard)
+    {
+        $admin = auth()->user();
+
+        if (! $admin || ! $admin->isSuperAdmin()) {
+            abort(403, 'Super admin only action.');
+        }
+
+        $data = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+        ]);
+
+        $blockers = $deletionGuard->getBlockers($product);
+
+        \Log::critical('Product force-deleted by super admin', [
+            'product_id' => $product->id,
+            'product_title' => $product->title,
+            'product_owner_id' => $product->user_id,
+            'super_admin_id' => $admin->id,
+            'super_admin_role' => $admin->role,
+            'reason' => $data['reason'],
+            'blockers_snapshot' => $blockers,
+            'timestamp' => now(),
+        ]);
+
+        $product->delete();
+
+        return redirect()->route('admin.products')
+            ->with('success', 'Product force-deleted by super admin action.');
     }
 
     public function transactions(Request $request)

@@ -103,6 +103,7 @@ Route::get('/payment/khalti/return', [PaymentController::class, 'khaltiReturn'])
 
 // Rental routes
 use App\Http\Controllers\User\RentalController;
+use Illuminate\Auth\Access\AuthorizationException;
 
 Route::middleware(['auth'])->group(function () {
     // renter side
@@ -123,6 +124,22 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/rental/request/{rentalRequest}/reject', [RentalController::class, 'reject'])->name('rental.reject');
 
 });
+
+Route::get('/rental/request/{rentalRequest}', function (\App\Models\RentalRequest $rentalRequest) {
+    if (!auth()->check()) {
+        return redirect()->route('login')
+            ->with('info', 'Please log in to view rental requests.');
+    }
+
+    try {
+        \Illuminate\Support\Facades\Gate::authorize('ownerManage', $rentalRequest);
+
+        return redirect()->route('rental.review', $rentalRequest->id);
+    } catch (AuthorizationException $e) {
+        return redirect()->route('rental.myRentals')
+            ->with('info', 'Open rental requests from My Rentals > Incoming Requests.');
+    }
+})->name('rental.request.show');
 
 Route::middleware(['auth', 'user_only'])->group(function () {
     Route::get('/my-purchases', [ProductController::class, 'myPurchases'])->name('products.myPurchases');
@@ -256,6 +273,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/products/{product}/approve', [AdminController::class, 'productApprove'])->name('products.approve');
     Route::post('/products/{product}/reject', [AdminController::class, 'productReject'])->name('products.reject');
     Route::delete('/products/{product}', [AdminController::class, 'productDelete'])->name('products.delete');
+    Route::delete('/products/{product}/force-delete', [AdminController::class, 'productForceDelete'])->middleware('super_admin')->name('products.forceDelete');
     Route::get('/products/{product}', [AdminController::class, 'productShow'])->name('products.show');
 
 

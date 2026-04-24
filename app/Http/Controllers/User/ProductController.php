@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\RentalRequest;
 use App\Models\SwapRequest;
 use App\Models\Review;
+use App\Services\ProductDeletionGuardService;
 use App\Services\UserVerificationService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -564,7 +565,7 @@ public function update(Request $request, $id)
     }
 
 
-   public function myListings()
+    public function myListings(ProductDeletionGuardService $deletionGuard)
 {
     $user = Auth::user();
 
@@ -604,13 +605,23 @@ public function update(Request $request, $id)
         ->latest()
         ->get();
 
+    $canDeleteByProduct = [];
+    $deleteBlockersByProduct = [];
+    foreach ($products as $product) {
+        $blockerMessage = $deletionGuard->blockerMessage($product);
+        $canDeleteByProduct[$product->id] = $blockerMessage === '';
+        $deleteBlockersByProduct[$product->id] = $blockerMessage;
+    }
+
     return view('products.my_listings', compact(
         'products',
         'pendingRequests',
         'activeRentals',
         'soldProducts',
         'swapRequests',
-        'activeSwaps'
+        'activeSwaps',
+        'canDeleteByProduct',
+        'deleteBlockersByProduct'
     ));
 }
 
@@ -643,9 +654,14 @@ public function update(Request $request, $id)
         return redirect()->back()->with('success', 'Product status updated successfully!');
     }
 
-    public function destroy($id)
+    public function destroy($id, ProductDeletionGuardService $deletionGuard)
     {
         $product = Product::where('user_id', Auth::id())->findOrFail($id);
+
+        $blockerMessage = $deletionGuard->blockerMessage($product);
+        if ($blockerMessage !== '') {
+            return redirect()->route('products.myListings')->with('error', $blockerMessage);
+        }
 
         // Delete all associated images from storage
         $allImages = array_filter(array_merge(
