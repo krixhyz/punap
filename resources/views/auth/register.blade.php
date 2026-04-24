@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-6" x-data="registerLocationForm()">
+    <form method="POST" action="{{ route('register') }}" class="space-y-6">
         @csrf
 
         <div class="grid gap-6 md:grid-cols-2">
@@ -69,8 +69,6 @@
                         <select id="province_id"
                                 name="province_id"
                                 required
-                                x-model="selectedProvince"
-                                x-on:change="onProvinceChange()"
                                 class="bg-white border border-[rgba(68,71,70,0.2)] px-3 py-2.5 font-manrope text-sm focus:border-[#006a38] focus:outline-none focus:ring-0 w-full rounded-md">
                             <option value="">Select province</option>
                             @foreach ($provinces as $province)
@@ -88,13 +86,8 @@
                         <select id="city_id"
                                 name="city_id"
                                 required
-                                x-model="selectedCity"
-                                x-bind:disabled="!selectedProvince || loadingCities"
                                 class="bg-white border border-[rgba(68,71,70,0.2)] px-3 py-2.5 font-manrope text-sm focus:border-[#006a38] focus:outline-none focus:ring-0 w-full rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="" x-text="selectedProvince ? 'Select city' : 'Choose province first'"></option>
-                            <template x-for="city in cities" :key="city.id">
-                                <option :value="city.id" x-text="city.name"></option>
-                            </template>
+                            <option value="">Choose province first</option>
                         </select>
                         @error('city_id')<p class="font-manrope text-sm text-[#ba1a1a] mt-1">{{ $message }}</p>@enderror
                     </div>
@@ -125,52 +118,86 @@
     </form>
 
     <script>
-        function registerLocationForm() {
-            return {
-                selectedProvince: '{{ old('province_id') }}',
-                selectedCity: '{{ old('city_id') }}',
-                cities: [],
-                loadingCities: false,
+        document.addEventListener('DOMContentLoaded', () => {
+            const provinceSelect = document.getElementById('province_id');
+            const citySelect = document.getElementById('city_id');
+            const loadingLabel = document.querySelector('[x-show="loadingCities"]');
+            const oldProvince = '{{ old('province_id') }}';
+            const oldCity = '{{ old('city_id') }}';
 
-                init() {
-                    if (this.selectedProvince) {
-                        this.fetchCities(this.selectedProvince, this.selectedCity);
-                    }
-                },
-
-                onProvinceChange() {
-                    this.selectedCity = '';
-                    this.cities = [];
-
-                    if (!this.selectedProvince) {
-                        return;
-                    }
-
-                    this.fetchCities(this.selectedProvince);
-                },
-
-                async fetchCities(provinceId, oldCity = '') {
-                    this.loadingCities = true;
-
-                    try {
-                        const response = await fetch(`/api/cities/${provinceId}`);
-                        if (!response.ok) {
-                            throw new Error('Failed to load cities');
-                        }
-
-                        const payload = await response.json();
-                        this.cities = Array.isArray(payload) ? payload : [];
-
-                        if (oldCity && this.cities.some((city) => String(city.id) === String(oldCity))) {
-                            this.selectedCity = String(oldCity);
-                        }
-                    } catch (error) {
-                        this.cities = [];
-                    } finally {
-                        this.loadingCities = false;
-                    }
-                },
+            const setLoading = (loading) => {
+                citySelect.disabled = loading || !provinceSelect.value;
+                if (loadingLabel) {
+                    loadingLabel.style.display = loading ? 'inline' : 'none';
+                }
             };
-        }
+
+            const resetCityOptions = (placeholder = 'Choose province first') => {
+                citySelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = placeholder;
+                citySelect.appendChild(option);
+            };
+
+            const populateCities = (cities, selectedCity = '') => {
+                resetCityOptions('Select city');
+
+                cities.forEach((city) => {
+                    const option = document.createElement('option');
+                    option.value = String(city.id);
+                    option.textContent = city.name;
+
+                    if (selectedCity && String(city.id) === String(selectedCity)) {
+                        option.selected = true;
+                    }
+
+                    citySelect.appendChild(option);
+                });
+            };
+
+            const fetchCities = async (provinceId, selectedCity = '') => {
+                if (!provinceId) {
+                    resetCityOptions();
+                    setLoading(false);
+                    return;
+                }
+
+                setLoading(true);
+
+                try {
+                    const response = await fetch(`/api/cities/${provinceId}`, {
+                        headers: { 'Accept': 'application/json' },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to load cities');
+                    }
+
+                    const payload = await response.json();
+                    const cities = Array.isArray(payload) ? payload : [];
+                    populateCities(cities, selectedCity);
+                    citySelect.disabled = false;
+                } catch (error) {
+                    resetCityOptions('No cities available');
+                    citySelect.disabled = true;
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            provinceSelect.addEventListener('change', () => {
+                fetchCities(provinceSelect.value, '');
+            });
+
+            if (oldProvince) {
+                provinceSelect.value = oldProvince;
+                fetchCities(oldProvince, oldCity);
+            } else {
+                resetCityOptions();
+                citySelect.disabled = true;
+                setLoading(false);
+            }
+        });
     </script>
 @endsection

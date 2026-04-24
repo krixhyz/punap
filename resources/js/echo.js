@@ -9,7 +9,7 @@
 let pollingIntervalId = null;
 const shownFallbackToastIds = new Set();
 
-if (window.Laravel && window.Laravel.userId) {
+if (window.Echo && window.Laravel && window.Laravel.userId) {
     const channelName = `App.Models.User.${window.Laravel.userId}`;
     console.debug('[Echo] Subscribing to private channel:', channelName);
 
@@ -91,7 +91,7 @@ if (window.Laravel && window.Laravel.userId) {
     setTimeout(syncNotificationsFallback, 1200);
 
 } else {
-    console.debug('[Echo] Live notifications not initialized (missing window.Laravel.userId).');
+    console.debug('[Echo] Live notifications not initialized (missing Echo instance or user context).');
 }
 
 function startPollingFallback() {
