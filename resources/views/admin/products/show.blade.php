@@ -136,22 +136,21 @@
                     </div>
 
                     <!-- Images -->
-                    @if($product->images || $product->image)
+                    @php
+                        $allImages = array_values(array_unique(array_filter(array_merge(
+                            is_array($product->images ?? null) ? $product->images : [],
+                            !empty($product->image) ? [$product->image] : []
+                        ))));
+                    @endphp
+                    @if(!empty($allImages))
                     <div class="bg-[#f3f3f3] p-4">
                         <p class="text-sm font-space font-bold uppercase tracking-wider text-[#888888] mb-3">Images</p>
                         <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
-                            @if($product->image)
-                            <div class="overflow-hidden border-2 border-[#bdbdbd]">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="Cover" class="h-32 w-full object-cover">
-                            </div>
-                            @endif
-                            @if($product->images)
-                                @foreach((array) $product->images as $image)
+                                @foreach($allImages as $image)
                                 <div class="overflow-hidden border-2 border-[#bdbdbd]">
-                                    <img src="{{ asset('storage/' . $image) }}" alt="Product" class="h-32 w-full object-cover">
+                                    <img src="{{ \App\Helpers\ImageUrlHelper::getProductImageUrl($image) }}" alt="Product" class="h-32 w-full object-cover">
                                 </div>
                                 @endforeach
-                            @endif
                         </div>
                     </div>
                     @endif

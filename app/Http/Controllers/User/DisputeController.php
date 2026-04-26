@@ -58,7 +58,20 @@ class DisputeController extends Controller
             'subject'     => 'required|string|max:200',
             'description' => 'required|string|max:3000',
             'evidence_photos' => 'nullable|array',
-            'evidence_photos.*' => 'file|image|max:5120',
+            'evidence_photos.*' => 'file|image|mimes:jpg,jpeg,png,webp,gif|max:5120',
+        ], [
+            'type.required' => 'Dispute type is required.',
+            'type.in' => 'Selected dispute type is invalid.',
+            'ref_id.required' => 'Transaction reference is required.',
+            'ref_id.integer' => 'Transaction reference is invalid.',
+            'subject.required' => 'Please provide a dispute subject.',
+            'subject.max' => 'Subject cannot exceed 200 characters.',
+            'description.required' => 'Please describe the dispute details.',
+            'description.max' => 'Description cannot exceed 3000 characters.',
+            'evidence_photos.array' => 'Evidence photos must be uploaded as a list of files.',
+            'evidence_photos.*.image' => 'Each evidence file must be an image.',
+            'evidence_photos.*.mimes' => 'Evidence images must be JPG, JPEG, PNG, GIF, or WebP.',
+            'evidence_photos.*.max' => 'Each evidence image must be 5 MB or smaller.',
         ]);
 
         $type = $validated['type'];

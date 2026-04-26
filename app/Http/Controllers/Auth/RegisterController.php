@@ -45,10 +45,12 @@ class RegisterController extends Controller
             'city_id' => $validated['city_id'],
             'password' => Hash::make($validated['password']),
             'role' => 'user',
+            'terms_accepted_at' => now(),
         ]);
 
         event(new Registered($user));
         Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('verification.notice');
     }

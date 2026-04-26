@@ -42,6 +42,101 @@ class ProductController extends Controller
         return false;
     }
 
+    private function uploadedImageRules(): array
+    {
+        return [
+            'images' => 'array|max:6',
+            'images.*' => 'file|image|mimes:jpg,jpeg,png,webp,gif|max:4096',
+        ];
+    }
+
+    private function uploadedImageMessages(): array
+    {
+        return [
+            'images.array' => 'Images must be sent as a list of files.',
+            'images.max' => 'You can upload up to 6 images only.',
+            'images.*.image' => 'Each file must be a valid image.',
+            'images.*.mimes' => 'Images must be JPG, JPEG, PNG, GIF, or WebP.',
+            'images.*.max' => 'Each image must be 4 MB or smaller.',
+        ];
+    }
+
+    private function productValidationRules(bool $isUpdate = false): array
+    {
+        $rules = [
+            'title' => 'required|string|min:3|max:255',
+            'description' => 'required|string|min:10|max:5000',
+            'category_id' => 'required|integer|exists:categories,id',
+            'condition' => 'required|in:NEW,LIKE_NEW,GOOD,FAIR,WORN_FOR_PARTS',
+            'price' => 'required_if:listing_type.*,sell,swap|nullable|numeric|gt:0|max:99999999',
+            'listing_type' => 'required|array|min:1|max:3',
+            'listing_type.*' => 'required|in:sell,rent,swap|distinct',
+            'images' => 'nullable|array|max:6',
+            'rent_deposit' => 'required_if:listing_type.*,rent|nullable|numeric|min:0|max:99999999',
+            'rent_fare' => 'required_if:listing_type.*,rent|nullable|numeric|min:0|max:99999999',
+            'rent_type' => 'required_if:listing_type.*,rent|nullable|in:hourly,daily',
+            'available_from' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:today',
+            'end_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:available_from',
+            'rent_duration' => 'required_if:listing_type.*,rent|nullable|integer|min:1|max:365',
+            'quantity' => 'required|integer|min:1|max:100',
+        ];
+
+        if ($isUpdate) {
+            $rules['remove_images'] = 'nullable|array|max:6';
+            $rules['remove_images.*'] = 'string|max:2048';
+        }
+
+        return $rules;
+    }
+
+    private function productValidationMessages(): array
+    {
+        return [
+            'title.required' => 'Please enter a listing title.',
+            'title.min' => 'The title must be at least 3 characters.',
+            'description.required' => 'Please provide a description for your listing.',
+            'description.min' => 'The description must be at least 10 characters.',
+            'category_id.required' => 'Please select a category.',
+            'category_id.exists' => 'Selected category is invalid.',
+            'condition.required' => 'Please select the item condition.',
+            'condition.in' => 'Selected condition is invalid.',
+            'listing_type.required' => 'Please select at least one listing type.',
+            'listing_type.min' => 'Please select at least one listing type.',
+            'listing_type.*.in' => 'Listing type selection is invalid.',
+            'price.required_if' => 'Price is required for sell or swap listings.',
+            'price.gt' => 'Price must be greater than 0.',
+            'quantity.required' => 'Quantity is required.',
+            'quantity.integer' => 'Quantity must be a whole number.',
+            'quantity.min' => 'Quantity must be at least 1.',
+            'quantity.max' => 'Quantity cannot exceed 100.',
+            'images.max' => 'You can upload up to 6 images only.',
+            'rent_deposit.required_if' => 'Rent deposit is required when rent is selected.',
+            'rent_fare.required_if' => 'Rent fare is required when rent is selected.',
+            'rent_type.required_if' => 'Please select a rent type.',
+            'available_from.required_if' => 'Please select the rental start date.',
+            'available_from.after_or_equal' => 'Rental start date cannot be in the past.',
+            'end_date.required_if' => 'Please select the rental end date.',
+            'end_date.after_or_equal' => 'Rental end date must be on or after the start date.',
+            'rent_duration.required_if' => 'Rental duration is required when rent is selected.',
+            'rent_duration.min' => 'Rental duration must be at least 1 day.',
+            'rent_duration.max' => 'Rental duration cannot exceed 365 days.',
+        ];
+    }
+
+    private function productValidationAttributes(): array
+    {
+        return [
+            'listing_type' => 'listing type',
+            'category_id' => 'category',
+            'available_from' => 'start date',
+            'end_date' => 'end date',
+            'rent_fare' => 'rent fare',
+            'rent_deposit' => 'rent deposit',
+            'rent_duration' => 'rent duration',
+            'remove_images' => 'images to remove',
+        ];
+    }
+
     public function index(Request $request)
     {
         if (Auth::check() && Auth::user()->isAdmin()) {
@@ -210,10 +305,8 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             $newImageValidator = Validator::make(
                 ['images' => $request->file('images')],
-                [
-                    'images' => 'array|max:6',
-                    'images.*' => 'file|image|max:4096',
-                ]
+                $this->uploadedImageRules(),
+                $this->uploadedImageMessages()
             );
 
             if ($newImageValidator->fails()) {
@@ -253,23 +346,12 @@ class ProductController extends Controller
             ]);
         }
 
-        $validator = Validator::make(array_merge($request->all(), ['images' => $tempImages]), [
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'condition' => 'required|in:NEW,LIKE_NEW,GOOD,FAIR,WORN_FOR_PARTS',
-            'price' => 'required_if:listing_type.*,sell,swap|nullable|numeric|gt:0',
-            'listing_type' => 'required|array|min:1',
-            'listing_type.*' => 'in:sell,rent,swap',
-            'images' => 'nullable|array|max:6',
-            'rent_deposit' => 'required_if:listing_type.*,rent|nullable|numeric|min:0',
-            'rent_fare' => 'required_if:listing_type.*,rent|nullable|numeric|min:0',
-            'rent_type' => 'required_if:listing_type.*,rent|nullable|in:hourly,daily',
-            'available_from' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:today',
-            'end_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:available_from',
-            'rent_duration' => 'required_if:listing_type.*,rent|nullable|integer|min:1',
-            'quantity' => 'required|integer|min:1',
-        ]);
+        $validator = Validator::make(
+            array_merge($request->all(), ['images' => $tempImages]),
+            $this->productValidationRules(),
+            $this->productValidationMessages(),
+            $this->productValidationAttributes()
+        );
 
         if ($validator->fails()) {
             return back()
@@ -375,10 +457,8 @@ public function update(Request $request, $id)
     if ($request->hasFile('images')) {
         $newImageValidator = Validator::make(
             ['images' => $request->file('images')],
-            [
-                'images' => 'array|max:6',
-                'images.*' => 'file|image|max:4096',
-            ]
+            $this->uploadedImageRules(),
+            $this->uploadedImageMessages()
         );
 
         if ($newImageValidator->fails()) {
@@ -405,25 +485,12 @@ public function update(Request $request, $id)
         ]);
     }
 
-    $validator = Validator::make(array_merge($request->all(), ['images' => $tempImages]), [
-        'title' => 'required|string|max:255',
-        'description' => 'required|string',
-        'category_id' => 'required|exists:categories,id',
-        'condition' => 'required|in:NEW,LIKE_NEW,GOOD,FAIR,WORN_FOR_PARTS',
-        'price' => 'required_if:listing_type.*,sell,swap|nullable|numeric|gt:0',
-        'listing_type' => 'required|array|min:1',
-        'listing_type.*' => 'in:sell,rent,swap',
-        'images' => 'nullable|array|max:6',
-        'remove_images' => 'nullable|array',
-        'remove_images.*' => 'string',
-        'rent_deposit' => 'required_if:listing_type.*,rent|nullable|numeric|min:0',
-        'rent_fare' => 'required_if:listing_type.*,rent|nullable|numeric|min:0',
-        'rent_type' => 'required_if:listing_type.*,rent|nullable|in:hourly,daily',
-        'available_from' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:today',
-        'end_date' => 'required_if:listing_type.*,rent|nullable|date|after_or_equal:available_from',
-        'rent_duration' => 'required_if:listing_type.*,rent|nullable|integer|min:1',
-        'quantity' => 'required|integer|min:1',
-    ]);
+    $validator = Validator::make(
+        array_merge($request->all(), ['images' => $tempImages]),
+        $this->productValidationRules(true),
+        $this->productValidationMessages(),
+        $this->productValidationAttributes()
+    );
 
     if ($validator->fails()) {
         return back()
@@ -636,6 +703,9 @@ public function update(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:available,sold,rented,swapped',
+        ], [
+            'status.required' => 'Please select a valid product status.',
+            'status.in' => 'Selected status is invalid.',
         ]);
 
         $product = Product::where('user_id', Auth::id())->findOrFail($id);

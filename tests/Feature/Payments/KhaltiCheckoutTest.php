@@ -68,7 +68,11 @@ class KhaltiCheckoutTest extends TestCase
                 'quantity' => 2,
             ]);
 
-        $response->assertRedirect(route('order.checkout.product', ['product' => $product->id, 'quantity' => 2], absolute: false));
+        $response->assertStatus(302);
+        $redirectUrl = (string) $response->headers->get('Location');
+        $this->assertStringContainsString(route('order.checkout.product', ['product' => $product->id], absolute: false), $redirectUrl);
+        $this->assertStringContainsString('quantity=2', $redirectUrl);
+        $this->assertStringContainsString('signature=', $redirectUrl);
         $this->assertDatabaseCount('orders', 0);
     }
 
@@ -269,7 +273,10 @@ class KhaltiCheckoutTest extends TestCase
             'pidx' => 'PIDX-SWAP-1',
         ]));
 
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('swap.mySwaps', [
+            'tab' => 'pending',
+            'swap_request_id' => $swapRequest->id,
+        ], absolute: false));
 
         $payment->refresh();
         $swapRequest->refresh();

@@ -15,8 +15,11 @@ use App\Policies\RentedRentalPolicy;
 use App\Policies\SwapRequestPolicy;
 use App\Observers\ReviewObserver;
 use App\Observers\DisputeObserver;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,6 +36,46 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('auth-login', function (Request $request) {
+            $email = strtolower((string) $request->input('email', ''));
+
+            return Limit::perMinute(20)->by($email . '|' . $request->ip());
+        });
+
+        RateLimiter::for('auth-register', function (Request $request) {
+            return Limit::perHour(20)->by($request->ip());
+        });
+
+        RateLimiter::for('password-reset-request', function (Request $request) {
+            $email = strtolower((string) $request->input('email', ''));
+
+            return Limit::perMinute(5)->by($email . '|' . $request->ip());
+        });
+
+        RateLimiter::for('password-reset-submit', function (Request $request) {
+            $email = strtolower((string) $request->input('email', ''));
+
+            return Limit::perMinute(10)->by($email . '|' . $request->ip());
+        });
+
+        RateLimiter::for('product-create', function (Request $request) {
+            $userId = $request->user()?->id;
+
+            return Limit::perHour(40)->by(($userId ? 'u:' . $userId : 'ip:' . $request->ip()));
+        });
+
+        RateLimiter::for('checkout-payment', function (Request $request) {
+            $userId = $request->user()?->id;
+
+            return Limit::perMinute(60)->by(($userId ? 'u:' . $userId : 'ip:' . $request->ip()));
+        });
+
+        RateLimiter::for('message-forms', function (Request $request) {
+            $userId = $request->user()?->id;
+
+            return Limit::perMinute(30)->by(($userId ? 'u:' . $userId : 'ip:' . $request->ip()));
+        });
+
         Review::observe(ReviewObserver::class);
         Dispute::observe(DisputeObserver::class);
 
@@ -42,8 +85,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SwapRequest::class, SwapRequestPolicy::class);
        
         if (app()->environment('production')) {
-        URL::forceScheme('https');
-    }
+            URL::forceScheme('https');
+            config(['session.secure' => true]);
+        }
     }
 
  

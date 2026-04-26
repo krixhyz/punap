@@ -70,7 +70,7 @@
         </div>
 
         <div class="mt-12 flex flex-col items-start justify-between gap-3 border-t border-[rgba(189,202,189,0.45)] pt-6 text-sm text-[#2f3234] md:flex-row md:items-center">
-            <p>© {{ date('Y') }} reloop.com.np | All Rights Reserved.</p>
+            <p>© {{ date('Y') }} reloop-np.me | All Rights Reserved.</p>
         </div>
     </div>
 </footer>

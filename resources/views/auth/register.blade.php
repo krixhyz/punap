@@ -131,6 +131,23 @@
             </section>
         </div>
 
+        <div class="bg-[#f8faf8] border border-[rgba(189,202,189,0.35)] rounded-xl p-4">
+            <label for="terms_accepted" class="flex items-start gap-3">
+                <input id="terms_accepted"
+                       name="terms_accepted"
+                       type="checkbox"
+                       value="1"
+                       {{ old('terms_accepted') ? 'checked' : '' }}
+                       class="mt-1 w-4 h-4 border-2 border-[rgba(68,71,70,0.4)] text-[#006a38] focus:outline-none">
+                <span class="font-manrope text-sm text-[#444746]">
+                    I accept the
+                    <a href="{{ route('terms') }}" target="_blank" rel="noopener noreferrer" class="font-space font-bold uppercase tracking-wider text-[#006a38] hover:text-[#004a29]">Terms and Conditions</a>
+                    and agree to follow marketplace rules.
+                </span>
+            </label>
+            @error('terms_accepted')<p class="font-manrope text-sm text-[#ba1a1a] mt-2">{{ $message }}</p>@enderror
+        </div>
+
         <button type="submit" class="w-full bg-gradient-to-br from-[#006a38] to-[#09864a] text-white py-3 font-space font-bold text-sm uppercase tracking-wider hover:brightness-110 active:brightness-95 transition-all rounded-md">
             Create Account
         </button>

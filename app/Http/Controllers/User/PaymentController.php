@@ -40,6 +40,11 @@ class PaymentController extends Controller
             'rent_fee' => 'nullable|numeric|min:0',
             'deposit' => 'nullable|numeric|min:0',
             'cash_topup' => 'nullable|numeric|min:0',
+        ], [
+            'flow_type.required' => 'Checkout flow type is required.',
+            'flow_type.in' => 'Selected checkout flow is invalid.',
+            'quantity.integer' => 'Quantity must be a whole number.',
+            'quantity.min' => 'Quantity must be at least 1.',
         ]);
 
         $flow = $validated['flow_type'];
@@ -75,15 +80,24 @@ class PaymentController extends Controller
     ) {
         $validated = $request->validate([
             'flow_type' => 'required|in:purchase,rent,swap',
-            'product_id' => 'nullable|integer|exists:products,id',
-            'rental_request_id' => 'nullable|integer|exists:rental_requests,id',
-            'swap_request_id' => 'nullable|integer|exists:swap_requests,id',
-            'quantity' => 'nullable|integer|min:1',
-            'buyer_name' => 'required|string|max:255',
-            'buyer_phone' => 'nullable|string|regex:/^[0-9]{10}$/|size:10',
-            'buyer_email' => 'required|email',
-            'buyer_address' => 'nullable|string',
+            'product_id' => 'required_if:flow_type,purchase|nullable|integer|exists:products,id',
+            'rental_request_id' => 'required_if:flow_type,rent|nullable|integer|exists:rental_requests,id',
+            'swap_request_id' => 'required_if:flow_type,swap|nullable|integer|exists:swap_requests,id',
+            'quantity' => 'required_if:flow_type,purchase|nullable|integer|min:1',
+            'buyer_name' => 'required|string|min:2|max:255',
+            'buyer_phone' => 'nullable|digits:10',
+            'buyer_email' => 'required|email:rfc|max:255',
+            'buyer_address' => 'nullable|string|max:1000',
             'payment_gateway' => 'required|in:esewa,khalti',
+        ], [
+            'product_id.required_if' => 'Product selection is required for purchase checkout.',
+            'rental_request_id.required_if' => 'Rental request is required for rental checkout.',
+            'swap_request_id.required_if' => 'Swap request is required for swap checkout.',
+            'quantity.required_if' => 'Quantity is required for purchase checkout.',
+            'quantity.integer' => 'Quantity must be a whole number.',
+            'quantity.min' => 'Quantity must be at least 1.',
+            'payment_gateway.required' => 'Please choose a payment gateway.',
+            'payment_gateway.in' => 'Selected payment gateway is invalid.',
         ]);
 
         if ($validated['flow_type'] === 'purchase') {
@@ -277,6 +291,7 @@ class PaymentController extends Controller
         InventoryReservationService $inventory
     ) {
         $provider = $this->resolveProvider($request);
+        $buyerDetails = $this->validateCheckoutBuyerDetails($request, false);
 
         if ($product->user_id === Auth::id()) {
             return redirect()->route('products.show', $product->id)->with('error', 'You cannot buy your own product.');
@@ -293,10 +308,6 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1|max:' . $availableQty,
-            'buyer_name' => 'required|string|max:255',
-            'buyer_phone' => 'nullable|string|regex:/^[0-9]{10}$/|size:10',
-            'buyer_email' => 'required|email',
-            'buyer_address' => 'nullable|string',
         ], [
             'quantity.required' => 'Quantity is required.',
             'quantity.integer' => 'Quantity must be a whole number.',
@@ -326,12 +337,6 @@ class PaymentController extends Controller
         $payment = $this->createPaymentForOrderItems($items, 'order', $provider);
 
         // Add buyer details to payment payload
-        $buyerDetails = [
-            'buyer_name' => $validated['buyer_name'],
-            'buyer_phone' => $validated['buyer_phone'] ?? null,
-            'buyer_email' => $validated['buyer_email'],
-            'buyer_address' => $validated['buyer_address'] ?? null,
-        ];
         $payload = $payment->request_payload ?? [];
         $payload['buyer_details'] = $buyerDetails;
         $payment->request_payload = $payload;
@@ -342,6 +347,7 @@ class PaymentController extends Controller
     public function createOrderPayment(Request $request, Order $order, EsewaService $esewaService, KhaltiService $khaltiService)
     {
         $provider = $this->resolveProvider($request);
+        $buyerDetails = $this->validateCheckoutBuyerDetails($request);
         $this->authorize('buyerAccess', $order);
 
         if ($order->status !== 'pending') {
@@ -358,21 +364,17 @@ class PaymentController extends Controller
             return redirect()->route('products.index')->with('error', 'Order reservation expired.');
         }
 
-        $payment = $this->createPaymentForOrders([$order], 'order', $provider);
+        $order->fill($buyerDetails);
+        $order->save();
+
+        $payment = $this->createPaymentForOrders([$order], 'order', $provider, $buyerDetails);
 
         return $this->initiatePayment($payment, $provider, $esewaService, $khaltiService, 'Order Payment');
     }
 
     public function createCartPayment(Request $request, EsewaService $esewaService, KhaltiService $khaltiService, InventoryReservationService $inventory)
     {
-        // Validate buyer details
-        $validated = $request->validate([
-            'buyer_name' => 'required|string|max:255',
-            'buyer_phone' => 'nullable|string|regex:/^[0-9]{10}$/|size:10',
-            'buyer_email' => 'required|email',
-            'buyer_address' => 'nullable|string',
-            'payment_gateway' => 'required|in:esewa,khalti',
-        ]);
+        $validated = $this->validateCheckoutBuyerDetails($request);
 
         // Log for debugging
         \Log::info('createCartPayment - Validated buyer details', [
@@ -607,13 +609,7 @@ class PaymentController extends Controller
             return redirect()->route('products.index')->with('info', 'A payment already exists for this rental request.');
         }
 
-        // Validate buyer details
-        $validated = $request->validate([
-            'buyer_name' => 'required|string|max:255',
-            'buyer_phone' => 'nullable|string|regex:/^[0-9]{10}$/|size:10',
-            'buyer_email' => 'required|email',
-            'buyer_address' => 'nullable|string',
-        ]);
+        $validated = $this->validateCheckoutBuyerDetails($request);
 
         $pricing = $pricingService->calculateRent(
             (float) ($rentalRequest->total_amount ?? 0),
@@ -688,13 +684,7 @@ class PaymentController extends Controller
             return redirect()->route('dashboard')->with('info', 'A payment already exists for this swap request.');
         }
 
-        // Validate buyer details
-        $validated = $request->validate([
-            'buyer_name' => 'required|string|max:255',
-            'buyer_phone' => 'nullable|string|regex:/^[0-9]{10}$/|size:10',
-            'buyer_email' => 'required|email',
-            'buyer_address' => 'nullable|string',
-        ]);
+        $validated = $this->validateCheckoutBuyerDetails($request);
 
         $cashTopup = $swapRequest->money_direction === 'owner_asks_cash'
             ? (float) ($swapRequest->asking_amount ?? 0)
@@ -747,7 +737,7 @@ class PaymentController extends Controller
         return $this->initiatePayment($payment, $provider, $esewaService, $khaltiService, 'Swap Checkout');
     }
 
-    private function createPaymentForOrders(array $orders, string $source, string $provider): Payment
+    private function createPaymentForOrders(array $orders, string $source, string $provider, array $buyerDetails = []): Payment
     {
         $subtotal = 0;
         foreach ($orders as $order) {
@@ -782,6 +772,7 @@ class PaymentController extends Controller
                 'source' => $source,
                 'gateway' => $provider,
                 'pricing' => $pricing,
+                'buyer_details' => $buyerDetails,
             ],
         ]);
 
@@ -1388,10 +1379,53 @@ class PaymentController extends Controller
         return $this->redirectBySource($payment, 'info', 'Payment already processed.');
     }
 
+    private function validateCheckoutBuyerDetails(Request $request, bool $strict = true): array
+    {
+        $phone = preg_replace('/\D+/', '', (string) $request->input('buyer_phone', ''));
+        $user = $request->user();
+
+        $request->merge([
+            'buyer_name' => trim((string) $request->input('buyer_name', (string) ($user?->name ?? ''))),
+            'buyer_email' => strtolower(trim((string) $request->input('buyer_email', (string) ($user?->email ?? '')))),
+            'buyer_address' => trim((string) $request->input('buyer_address', (string) ($user?->address ?? ''))),
+            'buyer_phone' => $phone !== '' ? substr($phone, -10) : null,
+        ]);
+
+        $rules = [
+            'buyer_name' => ($strict ? 'required' : 'nullable') . '|string|min:2|max:255',
+            'buyer_phone' => 'nullable|digits:10',
+            'buyer_email' => ($strict ? 'required' : 'nullable') . '|email:rfc|max:255',
+            'buyer_address' => 'nullable|string|max:1000',
+        ];
+
+        $validated = $request->validate($rules, [
+            'buyer_name.required' => 'Please enter your full name.',
+            'buyer_name.min' => 'Full name must be at least 2 characters.',
+            'buyer_phone.digits' => 'Phone number must be exactly 10 digits.',
+            'buyer_email.required' => 'Please enter your email address.',
+            'buyer_email.email' => 'Please enter a valid email address.',
+        ], [
+            'buyer_name' => 'full name',
+            'buyer_phone' => 'phone number',
+            'buyer_email' => 'email address',
+            'buyer_address' => 'delivery address',
+        ]);
+
+        return [
+            'buyer_name' => $validated['buyer_name'] ?? ($user?->name ?? ''),
+            'buyer_phone' => $validated['buyer_phone'] ?? null,
+            'buyer_email' => $validated['buyer_email'] ?? ($user?->email ?? ''),
+            'buyer_address' => $validated['buyer_address'] ?? null,
+        ];
+    }
+
     private function resolveProvider(Request $request): string
     {
         $validated = $request->validate([
             'payment_gateway' => ['required', 'in:esewa,khalti'],
+        ], [
+            'payment_gateway.required' => 'Please choose a payment gateway.',
+            'payment_gateway.in' => 'Selected payment gateway is invalid.',
         ]);
 
         return strtolower((string) $validated['payment_gateway']);

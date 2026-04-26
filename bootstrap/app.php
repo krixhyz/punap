@@ -5,7 +5,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,6 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $trustedProxies = env('TRUSTED_PROXIES', '*');
+        $middleware->trustProxies(
+            at: $trustedProxies === '*'
+                ? '*'
+                : array_filter(array_map('trim', explode(',', $trustedProxies)))
+        );
+
+        $middleware->authenticateSessions();
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
             'super_admin' => \App\Http\Middleware\IsSuperAdmin::class,
@@ -33,9 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 403);
             }
 
-            return redirect()
-                ->route(Auth::check() ? 'dashboard' : 'login')
-                ->with('error', 'Access denied. You can only access your own transactions.');
+            return response()->view('errors.403', [], 403);
         });
 
         $exceptions->render(function (HttpException $e, Request $request) {
@@ -50,8 +56,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 403);
             }
 
-            return redirect()
-                ->route(Auth::check() ? 'dashboard' : 'login')
-                ->with('error', 'Access denied. You can only access your own transactions.');
+            return response()->view('errors.403', [], 403);
         });
     })->create();

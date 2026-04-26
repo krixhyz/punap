@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
+    <link rel="shortcut icon" href="{{ asset('favicon.svg') }}?v=2">
     <title>{{ $title ?? 'Something went wrong' }} | {{ config('app.name', 'Reloop') }}</title>
     <style>
         :root {

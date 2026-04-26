@@ -14,6 +14,7 @@ use App\Services\WalletLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use App\Notifications\User\RentalRequestNotification;
 use App\Notifications\User\RentalRejectedNotification;
 use App\Notifications\User\RentalApprovedNotification;
@@ -40,12 +41,28 @@ class RentalController extends Controller
         $redirectToForm = fn () => redirect()->route('rental.create', $product->id);
 
         // 1. Validate inputs
-        $validated = $request->validate([
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'duration' => 'required|integer|min:1',
-            'total_amount' => 'required|numeric|min:0',
-        ]);
+        $validated = Validator::make(
+            $request->all(),
+            [
+                'start_date' => 'required|date|after_or_equal:today',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'duration' => 'required|integer|min:1|max:365',
+                'total_amount' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
+            ],
+            [
+                'start_date.required' => 'Please select a rental start date.',
+                'start_date.after_or_equal' => 'Rental start date cannot be in the past.',
+                'end_date.required' => 'Please select a rental end date.',
+                'end_date.after_or_equal' => 'Rental end date must be on or after start date.',
+                'duration.required' => 'Rental duration is required.',
+                'duration.integer' => 'Rental duration must be a whole number.',
+                'duration.min' => 'Rental duration must be at least 1 day.',
+                'duration.max' => 'Rental duration cannot exceed 365 days.',
+                'total_amount.required' => 'Total rental amount is required.',
+                'total_amount.numeric' => 'Total amount must be a valid number.',
+                'total_amount.regex' => 'Total amount must have at most 2 decimal places.',
+            ]
+        )->validate();
 
         if (!$rentalConfig || !$rentalConfig->available_from || !$rentalConfig->available_duration) {
             return $redirectToForm()->withInput()->withErrors([

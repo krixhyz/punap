@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'account_status',
         'status_notes',
         'profile_status',
+        'terms_accepted_at',
         'total_eco_score',
         'eco_level',
     ];
@@ -54,6 +55,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
             'profile_status' => 'string',
             'total_eco_score' => 'decimal:2',

@@ -55,12 +55,27 @@ class SwapRequestController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'offered_product_id' => 'required|exists:products,id',
+            'product_id' => 'required|integer|exists:products,id',
+            'offered_product_id' => 'required|integer|different:product_id|exists:products,id',
             'money_direction' => 'required|in:none,owner_asks_cash,requester_offers_cash',
             'asking_amount' => ['nullable', 'numeric', 'gt:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'offered_amount' => ['nullable', 'numeric', 'gt:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'message' => 'nullable|string|max:2000',
+        ], [
+            'product_id.required' => 'Requested product is required.',
+            'product_id.exists' => 'Requested product does not exist.',
+            'offered_product_id.required' => 'Please select your offered product.',
+            'offered_product_id.different' => 'Offered product must be different from requested product.',
+            'offered_product_id.exists' => 'Selected offered product is invalid.',
+            'money_direction.required' => 'Please choose a cash direction.',
+            'money_direction.in' => 'Selected cash direction is invalid.',
+            'asking_amount.numeric' => 'Asking amount must be a valid number.',
+            'asking_amount.gt' => 'Asking amount must be greater than 0.',
+            'asking_amount.regex' => 'Asking amount must have at most 2 decimal places.',
+            'offered_amount.numeric' => 'Offered amount must be a valid number.',
+            'offered_amount.gt' => 'Offered amount must be greater than 0.',
+            'offered_amount.regex' => 'Offered amount must have at most 2 decimal places.',
+            'message.max' => 'Message cannot exceed 2000 characters.',
         ]);
 
         $product = Product::findOrFail($data['product_id']);
@@ -321,6 +336,11 @@ class SwapRequestController extends Controller
         $data = $request->validate([
             'counter_amount' => ['nullable', 'numeric', 'gt:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'counter_message' => 'nullable|string|max:2000',
+        ], [
+            'counter_amount.numeric' => 'Counter amount must be a valid number.',
+            'counter_amount.gt' => 'Counter amount must be greater than 0.',
+            'counter_amount.regex' => 'Counter amount must have at most 2 decimal places.',
+            'counter_message.max' => 'Counter message cannot exceed 2000 characters.',
         ]);
 
         if (empty($data['counter_amount']) && empty($data['counter_message'])) {
@@ -670,6 +690,8 @@ class SwapRequestController extends Controller
         // Validate input
         $data = $request->validate([
             'notes' => 'nullable|string|max:500',
+        ], [
+            'notes.max' => 'Confirmation notes cannot exceed 500 characters.',
         ]);
 
         // Determine if user is owner or requester

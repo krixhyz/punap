@@ -40,7 +40,7 @@ class AuthController extends Controller
         return redirect()->intended(
             $request->user()->isAdmin()
                 ? route('admin.dashboard')
-                : route('landing')
+                : route('dashboard')
         );
     }
 

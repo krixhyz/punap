@@ -39,17 +39,17 @@ use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\PaymentController;
 
  Route::middleware(['auth', 'verified', 'user_only'])->group(function () {
-     Route::post('/checkout/calculate', [PaymentController::class, 'calculateCheckout'])->name('checkout.calculate');
-     Route::post('/checkout/pay', [PaymentController::class, 'checkoutPay'])->name('checkout.pay');
-     Route::post('/payment/verify', [PaymentController::class, 'verifyPayment'])->name('payment.verify');
+     Route::post('/checkout/calculate', [PaymentController::class, 'calculateCheckout'])->middleware('throttle:checkout-payment')->name('checkout.calculate');
+     Route::post('/checkout/pay', [PaymentController::class, 'checkoutPay'])->middleware('throttle:checkout-payment')->name('checkout.pay');
+     Route::post('/payment/verify', [PaymentController::class, 'verifyPayment'])->middleware('throttle:checkout-payment')->name('payment.verify');
      Route::post('/orders/{order}', [PaymentController::class, 'orderDetails'])->name('orders.details.json');
      Route::get('/transactions/my-history', [PaymentController::class, 'myTransactionHistory'])->name('transactions.my-history');
 
      Route::post('/order/{product}', [OrderController::class, 'store'])->name('order.store');
      Route::get('/order/product/{product}/checkout', [OrderController::class, 'checkoutProduct'])->name('order.checkout.product');
-     Route::post('/order/product/{product}/confirm', [PaymentController::class, 'createDirectOrderPayment'])->name('order.confirm.product');
+     Route::post('/order/product/{product}/confirm', [PaymentController::class, 'createDirectOrderPayment'])->middleware('throttle:checkout-payment')->name('order.confirm.product');
      Route::get('/order/{order}/checkout', [OrderController::class, 'checkout'])->name('order.checkout');
-     Route::post('/order/{order}/confirm', [PaymentController::class, 'createOrderPayment'])->name('order.confirm');
+     Route::post('/order/{order}/confirm', [PaymentController::class, 'createOrderPayment'])->middleware('throttle:checkout-payment')->name('order.confirm');
      Route::post('/order/{order}/cancel-checkout', [OrderController::class, 'cancelFromCheckout'])->name('order.cancelCheckout');
  });
 
@@ -109,13 +109,15 @@ Route::get('/', function () {
 
     return view('landing', compact('featuredProducts', 'topCategories'));
 })->name('landing');
+
+Route::view('/terms-and-conditions', 'legal.terms')->name('terms');
 Route::get('/marketplace', [ProductController::class, 'index'])->name('products.index');
 
 
 // Listing routes (must be before {id} route to avoid conflict)
 Route::middleware(['auth'])->group(function () {
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create'); // MOVED HERE
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::post('/products', [ProductController::class, 'store'])->middleware('throttle:product-create')->name('products.store');
 
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
@@ -145,7 +147,7 @@ Route::middleware(['auth', 'verified', 'user_only'])->group(function () {
     Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
     Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-    Route::post('/cart/place-order', [PaymentController::class, 'createCartPayment'])->name('orders.placeFromCart');
+    Route::post('/cart/place-order', [PaymentController::class, 'createCartPayment'])->middleware('throttle:checkout-payment')->name('orders.placeFromCart');
 
 });
 
@@ -162,10 +164,10 @@ Route::middleware(['auth'])->group(function () {
     // renter side
     Route::middleware(['verified', 'user_only'])->group(function () {
         Route::get('/rent/{product}', [RentalController::class, 'create'])->name('rental.create');
-        Route::post('/rental/request/{product}', [RentalController::class, 'store'])->name('rental.store');
+        Route::post('/rental/request/{product}', [RentalController::class, 'store'])->middleware('throttle:message-forms')->name('rental.store');
         Route::get('/rental/checkout/{rentalRequest}', [RentalController::class, 'checkout'])->name('rental.checkout');
         Route::get('/rental/payment/{rentalRequest}', [RentalController::class, 'payment'])->name('rental.payment');
-        Route::post('/rental/{rentalRequest}/pay', [PaymentController::class, 'createRentalPayment'])->name('rental.pay');
+        Route::post('/rental/{rentalRequest}/pay', [PaymentController::class, 'createRentalPayment'])->middleware('throttle:checkout-payment')->name('rental.pay');
         Route::get('/rental/{rental}', [RentalController::class, 'show'])->name('rental.show');
         Route::patch('/rental/{rentedRental}/request-return', [RentalController::class, 'requestReturn'])->name('rental.requestReturn');
         Route::patch('/rental/{rentedRental}/return', [RentalController::class, 'returnRental'])->name('rental.return'); // NEW
@@ -247,6 +249,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Submit swap request
     Route::post('/swap/request', [SwapRequestController::class, 'store'])
+        ->middleware('throttle:message-forms')
         ->name('swap.request.store');
 
     // Show incoming swap requests (for owners)
@@ -273,10 +276,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/swap/checkout/{swapRequest}', [SwapRequestController::class, 'checkout'])
         ->name('swap.checkout');
     Route::post('/swap/{swapRequest}/pay', [PaymentController::class, 'createSwapPayment'])
+        ->middleware('throttle:checkout-payment')
         ->name('swap.pay');
 
     // Counter offer flow
     Route::post('/swap/{swapRequest}/counter', [SwapRequestController::class, 'counterOffer'])
+        ->middleware('throttle:message-forms')
         ->name('swap.request.counter');
     });
     Route::post('/swap/{swapRequest}/counter/accept', [SwapRequestController::class, 'acceptCounter'])
@@ -360,7 +365,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 use App\Http\Controllers\User\ReviewController;
 Route::middleware('auth')->group(function () {
     Route::get('/review/create', [ReviewController::class, 'create'])->name('review.create');
-    Route::post('/review', [ReviewController::class, 'store'])->name('review.store');
+    Route::post('/review', [ReviewController::class, 'store'])->middleware('throttle:message-forms')->name('review.store');
 });
 Route::get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
 Route::get('/user/{user}/reviews', [ReviewController::class, 'userReviews'])->name('user.reviews');
@@ -369,7 +374,7 @@ Route::get('/user/{user}/reviews', [ReviewController::class, 'userReviews'])->na
 use App\Http\Controllers\User\DisputeController;
 Route::middleware('auth')->group(function () {
     Route::get('/dispute/create', [DisputeController::class, 'create'])->name('dispute.create');
-    Route::post('/dispute', [DisputeController::class, 'store'])->name('dispute.store');
+    Route::post('/dispute', [DisputeController::class, 'store'])->middleware('throttle:message-forms')->name('dispute.store');
     Route::get('/my-disputes', [DisputeController::class, 'myDisputes'])->name('dispute.my');
 });
 

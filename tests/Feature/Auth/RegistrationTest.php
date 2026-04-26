@@ -40,6 +40,7 @@ class RegistrationTest extends TestCase
             'city_id' => $city->id,
             'password' => 'password',
             'password_confirmation' => 'password',
+            'terms_accepted' => '1',
         ]);
 
         $this->assertAuthenticated();

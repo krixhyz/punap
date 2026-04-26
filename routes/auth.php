@@ -11,17 +11,21 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     // Authentication routes
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
 
     // Registration routes
     Route::get('register', [RegisterController::class, 'showRegisterForm'])->name('register');
-    Route::post('register', [RegisterController::class, 'register']);
+    Route::post('register', [RegisterController::class, 'register'])->middleware('throttle:auth-register');
 
     // Password reset routes
     Route::get('forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])->name('password.request');
-    Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:password-reset-request')
+        ->name('password.email');
     Route::get('reset-password/{token}', [PasswordResetController::class, 'showResetPasswordForm'])->name('password.reset');
-    Route::post('reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.store');
+    Route::post('reset-password', [PasswordResetController::class, 'resetPassword'])
+        ->middleware('throttle:password-reset-submit')
+        ->name('password.store');
 });
 
 // Protected routes (authenticated users only)

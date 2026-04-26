@@ -4,7 +4,15 @@
 <div class="mx-auto max-w-7xl space-y-8">
     <section class="surface-card-strong p-8">
         <div class="flex items-start gap-5">
-            <div class="flex h-24 w-24 items-center justify-center bg-[var(--reloop-primary)] text-4xl font-semibold text-white shrink-0">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+            @php
+                $avatarInitial = \Illuminate\Support\Str::upper(
+                    \Illuminate\Support\Str::substr(trim((string) $user->name), 0, 1)
+                );
+                if ($avatarInitial === '') {
+                    $avatarInitial = 'U';
+                }
+            @endphp
+            <div class="allow-loop-circle flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#006a38] text-4xl font-semibold text-white shadow-sm">{{ $avatarInitial }}</div>
             <div class="flex-1 min-w-0">
                 <div class="mb-2 flex flex-wrap items-center gap-3">
                     <h1 class="text-3xl font-extrabold text-[var(--reloop-ink)]">{{ $user->name }}</h1>
