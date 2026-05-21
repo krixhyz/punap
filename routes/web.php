@@ -13,13 +13,6 @@ use App\Http\Controllers\LocationController;
 //     return view('welcome');
 // });
 
-use App\Events\MessageSent;
-
-Route::get('/test-broadcast', function () {
-    broadcast(new MessageSent('Hello World'));
-    return 'Broadcasted';
-});
-
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 
@@ -338,4 +331,3 @@ require __DIR__.'/auth.php';
 
 //Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
