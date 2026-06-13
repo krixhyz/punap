@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
     <link rel="shortcut icon" href="{{ asset('favicon.svg') }}?v=2">
-    <title>Reloop | Circular Marketplace</title>
+    <title>Punap | Circular Marketplace</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .intro-fade {
@@ -59,7 +59,7 @@
                         <span class="block text-[#006a38]">Built For Practical Reuse</span>
                     </h1>
                     <p class="intro-rise delay-2 mt-5 max-w-2xl text-base leading-relaxed text-[#30423a] sm:text-lg">
-                        ReLoop supports buy, rent, and swap workflows in one place. The goal is simple:
+                        Punap supports buy, rent, and swap workflows in one place. The goal is simple:
                         extend product life cycles, reduce unnecessary consumption, and provide a safer
                         transaction flow for local users.
                     </p>
@@ -215,7 +215,7 @@
         <section class="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-[1.75rem] border border-[#d5e1d7] bg-white p-6 shadow-[0_16px_28px_rgba(19,49,35,0.08)] md:p-8">
-                    <p class="font-space text-[11px] font-bold uppercase tracking-[0.16em] text-[#006a38]">How ReLoop Works</p>
+                    <p class="font-space text-[11px] font-bold uppercase tracking-[0.16em] text-[#006a38]">How Punap Works</p>
                     <h2 class="mt-2 font-space text-2xl font-bold uppercase tracking-[0.02em] text-[#122d22]">Simple Four-Step Flow</h2>
                     <ol class="mt-5 space-y-3">
                         <li class="rounded-xl border border-[#dbe5dd] bg-[#f8fbf8] p-4">
@@ -241,7 +241,7 @@
                     <p class="font-space text-[11px] font-bold uppercase tracking-[0.16em] text-[#006a38]">Circular Economy Message</p>
                     <h2 class="mt-2 font-space text-2xl font-bold uppercase tracking-[0.02em] text-[#122d22]">Why Sustainability Matters</h2>
                     <p class="mt-4 text-sm leading-relaxed text-[#30423a]">
-                        ReLoop is designed around circular economy thinking: maintain product value for longer,
+                        Punap is designed around circular economy thinking: maintain product value for longer,
                         avoid early disposal, and reduce demand for unnecessary new production.
                     </p>
                     <div class="mt-5 rounded-xl border border-[#d9e4db] bg-[#f8fbf8] p-4">
@@ -262,7 +262,7 @@
                             @auth
                                 <a href="{{ route('products.create') }}" class="rounded-full border border-white/60 px-4 py-2 font-space text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-white/10">Create Listing</a>
                             @else
-                                <a href="{{ route('register') }}" class="rounded-full border border-white/60 px-4 py-2 font-space text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-white/10">Join ReLoop</a>
+                                <a href="{{ route('register') }}" class="rounded-full border border-white/60 px-4 py-2 font-space text-[11px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-white/10">Join Punap</a>
                             @endauth
                         </div>
                     </div>

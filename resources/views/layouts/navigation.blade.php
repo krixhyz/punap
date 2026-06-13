@@ -12,7 +12,7 @@
 
     <div class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-6">
-            <a href="{{ route('landing') }}" class="font-space text-xs font-extrabold uppercase tracking-[0.22em] text-[#006a38]">Reloop</a>
+            <a href="{{ route('landing') }}" class="font-space text-xs font-extrabold uppercase tracking-[0.22em] text-[#006a38]">Punap</a>
             <a href="{{ route('products.index') }}" class="hidden font-space text-xs font-semibold uppercase tracking-[0.2em] text-[#444746] transition-colors hover:text-[#006a38] md:inline">Marketplace</a>
         </div>
 

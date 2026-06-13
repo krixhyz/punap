@@ -4,7 +4,7 @@
     </svg>
     <p class="font-manrope text-xs text-[#92400e] leading-relaxed">
         <span class="font-bold">Transact carefully.</span>
-        Reloop acts solely as a platform connecting buyers and sellers. We are not responsible for scams, fraudulent activity, counterfeit products, or disputes arising from user interactions.
+        Punap acts solely as a platform connecting buyers and sellers. We are not responsible for scams, fraudulent activity, counterfeit products, or disputes arising from user interactions.
         <a href="{{ route('terms') }}" class="underline hover:text-[#78350f]" target="_blank">View full disclaimer</a>.
     </p>
 </div>

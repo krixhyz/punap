@@ -10,7 +10,7 @@ let pollingIntervalId = null;
 
 // Persist shown toast IDs in sessionStorage so toasts don't re-fire on page navigation.
 // sessionStorage clears automatically when the browser tab is closed.
-const TOAST_STORAGE_KEY = 'reloop_shown_notif_ids';
+const TOAST_STORAGE_KEY = 'punap_shown_notif_ids';
 
 function getShownIds() {
     try {

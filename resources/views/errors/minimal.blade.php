@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v=2">
     <link rel="shortcut icon" href="{{ asset('favicon.svg') }}?v=2">
-    <title>{{ $title ?? 'Something went wrong' }} | {{ config('app.name', 'Reloop') }}</title>
+    <title>{{ $title ?? 'Something went wrong' }} | {{ config('app.name', 'Punap') }}</title>
     <style>
         :root {
             --bg-1: #f2f6f3;
@@ -140,7 +140,7 @@
                 <a class="btn btn-primary" href="{{ url('/') }}">Back To Home</a>
             </div>
 
-            <p class="meta">{{ config('app.name', 'Reloop') }} • If the issue persists, try refreshing in a moment.</p>
+            <p class="meta">{{ config('app.name', 'Punap') }} • If the issue persists, try refreshing in a moment.</p>
         </section>
     </main>
 </body>

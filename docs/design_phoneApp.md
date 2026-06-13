@@ -1,6 +1,6 @@
-# RELOOP — Mobile App UI Design Plan
+# PUNAP — Mobile App UI Design Plan
 
-> **Application:** RELOOP — A Circular P2P Marketplace  
+> **Application:** PUNAP — A Circular P2P Marketplace
 > **Platform:** React Native (iOS + Android) / Flutter  
 > **Purpose:** Allow users to Buy, Rent, and Swap everyday goods in a sustainable P2P economy.  
 > **Document Author:** Generated from live web app analysis — June 2026
@@ -9,7 +9,7 @@
 
 ## 1. App Overview & Mission
 
-RELOOP is a circular economy marketplace where users can give preloved items a second life through three transaction modes:
+PUNAP is a circular economy marketplace where users can give preloved items a second life through three transaction modes:
 
 - **Buy / Sell** — Direct P2P purchase
 - **Rent / Borrow** — Time-bound item lending with security deposit
@@ -115,7 +115,7 @@ Each tab manages its own independent navigation stack so back navigation is cont
 
 **Layout:**
 - Full-screen deep green gradient (`#124D2B → #1A6B3C`)
-- Centered RELOOP wordmark in white (Outfit Bold, 36sp)
+- Centered PUNAP wordmark in white (Outfit Bold, 36sp)
 - Tagline: _"Give it a second life."_ in white semi-transparent text
 - Animated leaf/loop icon (SVG, 80dp, draws in with stroke animation)
 - "Get Started" button (white bg, green text) — leads to Registration
@@ -127,7 +127,7 @@ Each tab manages its own independent navigation stack so back navigation is cont
 
 **Layout:**
 - Light background (`#F5F6F8`)
-- Top: RELOOP logo + "Welcome Back" heading
+- Top: PUNAP logo + "Welcome Back" heading
 - Form card (white, rounded-16, shadow):
   - Email input with mail icon prefix
   - Password input with lock icon + eye toggle suffix
@@ -135,7 +135,7 @@ Each tab manages its own independent navigation stack so back navigation is cont
 - Primary CTA: "Sign In" (full-width, green, 52dp height)
 - Divider: "— or —"
 - Social login row (Google / Facebook icons)
-- Footer: "New to RELOOP? Register"
+- Footer: "New to PUNAP? Register"
 
 ---
 
@@ -661,7 +661,7 @@ Marketplace product grid paginates — "load more" trigger at bottom of list (au
 
 ## 11. Role System Overview
 
-RELOOP has three user roles, each with a distinct app experience:
+PUNAP has three user roles, each with a distinct app experience:
 
 | Role | Badge Colour | App Experience |
 |---|---|---|
@@ -1209,4 +1209,4 @@ These cards are hidden for the Admin role; only visible to Super Admin.
 
 ---
 
-*End of RELOOP Mobile App UI Design Plan*
+*End of PUNAP Mobile App UI Design Plan*

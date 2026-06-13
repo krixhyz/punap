@@ -13,7 +13,7 @@
         <div class="space-y-5 font-manrope text-sm text-[#1a1c1c] leading-7">
             <section>
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#006a38] mb-1">1. Platform Use</h2>
-                <p>By using ReLoop, users agree to use the platform responsibly for buying, renting, and swapping items.</p>
+                <p>By using Punap, users agree to use the platform responsibly for buying, renting, and swapping items.</p>
             </section>
 
             <section>
@@ -23,12 +23,12 @@
 
             <section>
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#006a38] mb-1">3. Listings</h2>
-                <p>All product details must be honest and accurate. ReLoop can remove or approve listings if needed.</p>
+                <p>All product details must be honest and accurate. Punap can remove or approve listings if needed.</p>
             </section>
 
             <section>
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#006a38] mb-1">4. Transactions</h2>
-                <p>All transactions are between users. ReLoop only provides the platform and does not own listed items.</p>
+                <p>All transactions are between users. Punap only provides the platform and does not own listed items.</p>
             </section>
 
             <section>
@@ -62,25 +62,25 @@
 
             <section>
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#006a38] mb-1">8. Account Actions</h2>
-                <p>ReLoop may suspend or delete accounts that violate rules.</p>
+                <p>Punap may suspend or delete accounts that violate rules.</p>
             </section>
 
             <section>
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#006a38] mb-1">9. Limitation of Liability</h2>
-                <p>ReLoop is not responsible for product quality, delivery issues, or disputes between users.</p>
+                <p>Punap is not responsible for product quality, delivery issues, or disputes between users.</p>
             </section>
 
             <section class="border border-[#fde68a] bg-[#fffbeb] rounded-sm px-5 py-4">
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#b45309] mb-3">10. User Transactions and Disclaimer of Responsibility</h2>
 
                 <p class="mb-3">
-                    Reloop operates solely as a digital marketplace platform that connects independent buyers, sellers, renters, and swappers ("Users"). Reloop is <strong>not a party to any transaction</strong> conducted between Users and does not own, hold, inspect, or handle any items listed on the platform.
+                    Punap operates solely as a digital marketplace platform that connects independent buyers, sellers, renters, and swappers ("Users"). Punap is <strong>not a party to any transaction</strong> conducted between Users and does not own, hold, inspect, or handle any items listed on the platform.
                 </p>
 
                 <ul class="space-y-2.5 mb-3">
                     <li class="flex items-start gap-2.5">
                         <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b45309]"></span>
-                        <span><strong>Platform role only.</strong> Reloop provides the technology infrastructure to facilitate listings, discovery, and payment processing. We do not act as an agent, broker, or guarantor for any User or transaction.</span>
+                        <span><strong>Platform role only.</strong> Punap provides the technology infrastructure to facilitate listings, discovery, and payment processing. We do not act as an agent, broker, or guarantor for any User or transaction.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                         <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b45309]"></span>
@@ -88,26 +88,26 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                         <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b45309]"></span>
-                        <span><strong>User risk.</strong> All transactions are conducted at the sole risk of the participating Users. By completing a transaction on Reloop, you acknowledge that you have independently assessed the counterparty and the item involved.</span>
+                        <span><strong>User risk.</strong> All transactions are conducted at the sole risk of the participating Users. By completing a transaction on Punap, you acknowledge that you have independently assessed the counterparty and the item involved.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                         <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b45309]"></span>
-                        <span><strong>No guarantee of authenticity or quality.</strong> Reloop does not verify, warrant, or guarantee the authenticity, condition, quality, safety, legality, or fitness for purpose of any item listed on the platform, nor the identity, trustworthiness, or reliability of any User.</span>
+                        <span><strong>No guarantee of authenticity or quality.</strong> Punap does not verify, warrant, or guarantee the authenticity, condition, quality, safety, legality, or fitness for purpose of any item listed on the platform, nor the identity, trustworthiness, or reliability of any User.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                         <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b45309]"></span>
-                        <span><strong>No liability for user conduct.</strong> Reloop expressly disclaims all liability for any loss, damage, injury, claim, or expense of any kind — including but not limited to financial loss, loss of data, or consequential damages — arising out of or in connection with: scams or fraudulent activity by other Users; counterfeit, misrepresented, or defective products; payment disputes or failed transactions; non-delivery or damage of items; or any other interaction between Users on or off the platform.</span>
+                        <span><strong>No liability for user conduct.</strong> Punap expressly disclaims all liability for any loss, damage, injury, claim, or expense of any kind — including but not limited to financial loss, loss of data, or consequential damages — arising out of or in connection with: scams or fraudulent activity by other Users; counterfeit, misrepresented, or defective products; payment disputes or failed transactions; non-delivery or damage of items; or any other interaction between Users on or off the platform.</span>
                     </li>
                 </ul>
 
                 <p class="text-xs text-[#92400e] leading-relaxed">
-                    By using Reloop, you agree to transact responsibly and acknowledge that the platform's liability is limited to the maximum extent permitted by applicable law. If you believe a User has engaged in fraudulent or illegal conduct, you are encouraged to report it through our dispute system and, where appropriate, to the relevant authorities.
+                    By using Punap, you agree to transact responsibly and acknowledge that the platform's liability is limited to the maximum extent permitted by applicable law. If you believe a User has engaged in fraudulent or illegal conduct, you are encouraged to report it through our dispute system and, where appropriate, to the relevant authorities.
                 </p>
             </section>
 
             <section>
                 <h2 class="font-space text-xs font-bold uppercase tracking-widest text-[#006a38] mb-1">11. Agreement</h2>
-                <p>By using ReLoop, you accept these terms.</p>
+                <p>By using Punap, you accept these terms.</p>
             </section>
         </div>
 

@@ -1,0 +1,722 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ProfileStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ProductCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  SWAPPED
+}
+
+enum RentType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum RentalStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  RETURN_REQUESTED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum DepositStatus {
+  HELD
+  REFUNDED
+  FORFEITED
+}
+
+enum SwapStatus {
+  PENDING
+  COUNTERED
+  ACCEPTED
+  AWAITING_PAYMENT
+  CONFIRMATION_PENDING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum NegotiationEventType {
+  INITIAL_OFFER
+  COUNTER_OFFER
+  ACCEPT
+  REJECT
+  CANCEL
+}
+
+enum MoneyDirection {
+  NONE
+  OWNER_ASKS_CASH
+  REQUESTER_OFFERS_CASH
+}
+
+enum PaymentSourceType {
+  ORDER
+  RENTAL
+  SWAP
+}
+
+enum PaymentGateway {
+  KHALTI
+  ESEWA
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETE
+  FAILED
+  REFUNDED
+}
+
+enum WalletType {
+  USER
+  PLATFORM
+}
+
+enum LedgerDirection {
+  CREDIT
+  DEBIT
+}
+
+enum LedgerEntryType {
+  SALE_CREDIT
+  RENTAL_CREDIT
+  SWAP_CREDIT
+  SWAP_DEBIT
+  PLATFORM_FEE
+  PAYOUT_HOLD
+  PAYOUT_RELEASE
+  PAYOUT_PAID
+  DEPOSIT_HOLD
+  DEPOSIT_REFUND
+  DEPOSIT_FORFEIT
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum DisputeStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String        @id @default(uuid())
+  name            String
+  email           String        @unique
+  phone           String?
+  password        String
+  role            UserRole      @default(USER)
+  accountStatus   AccountStatus @default(ACTIVE)
+  statusNotes     String?
+  profileStatus   ProfileStatus @default(UNVERIFIED)
+  emailVerifiedAt DateTime?
+  address         String?
+  provinceId      Int?
+  cityId          Int?
+  avatarUrl       String?
+  totalEcoScore   Decimal       @default(0) @db.Decimal(10, 2)
+  ecoLevel        String        @default("NONE")
+  termsAcceptedAt DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  province Province? @relation(fields: [provinceId], references: [id])
+  city     City?     @relation(fields: [cityId], references: [id])
+
+  refreshTokens             RefreshToken[]
+  emailVerificationTokens   EmailVerificationToken[]
+  passwordResetTokens       PasswordResetToken[]
+  products                  Product[]
+  orders                    Order[]                @relation("BuyerOrders")
+  rentalBookingsAsRenter    RentalBooking[]        @relation("RenterBookings")
+  rentalBookingsAsOwner     RentalBooking[]        @relation("OwnerBookings")
+  swapRequestsMade          SwapRequest[]          @relation("RequesterSwaps")
+  swapRequestsReceived      SwapRequest[]          @relation("OwnerSwaps")
+  wallet                    Wallet?
+  payoutRequests            PayoutRequest[]        @relation("UserPayouts")
+  reviewsWritten            Review[]               @relation("ReviewerReviews")
+  reviewsReceived           Review[]               @relation("SubjectReviews")
+  disputesOpened            Dispute[]              @relation("ComplainantDisputes")
+  disputesReceived          Dispute[]              @relation("RespondentDisputes")
+  disputesFavored           Dispute[]              @relation("FavoredDisputes")
+  disputesResolved          Dispute[]              @relation("ResolvedByDisputes")
+  notifications             Notification[]
+  ecoScores                 UserEcoScore[]
+  wishlist                  Wishlist[]
+  recentlyViewed            RecentlyViewed[]
+  adminPayoutsManaged       PayoutRequest[]        @relation("AdminManagedPayouts")
+  rentalDepositsProcessed   RentalDeposit[]        @relation("ProcessedDeposits")
+  swapNegotiationEvents     SwapNegotiationEvent[]
+
+  @@index([email])
+  @@index([role])
+  @@index([accountStatus])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Location ────────────────────────────────────────────────────────────────
+
+model Province {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  cities City[]
+  users  User[]
+}
+
+model City {
+  id         Int      @id @default(autoincrement())
+  name       String
+  provinceId Int
+  createdAt  DateTime @default(now())
+
+  province Province @relation(fields: [provinceId], references: [id])
+  users    User[]
+
+  @@unique([name, provinceId])
+  @@index([provinceId])
+}
+
+// ─── Catalogue ───────────────────────────────────────────────────────────────
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  parentId  Int?
+  ecoPoints Decimal  @default(0) @db.Decimal(10, 2)
+  icon      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryParent", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryParent")
+  products Product[]
+}
+
+model Product {
+  id               String           @id @default(uuid())
+  sellerId         String
+  title            String
+  description      String?
+  price            Decimal          @db.Decimal(10, 2)
+  quantity         Int              @default(1)
+  condition        ProductCondition
+  categoryId       Int
+  images           String[]
+  transactionTypes String[]
+  approvalStatus   ApprovalStatus   @default(PENDING)
+  status           ProductStatus    @default(ACTIVE)
+  provinceId       Int?
+  cityId           Int?
+  deletedAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Rental config inlined — no separate rental config table
+  rentFare          Decimal?  @db.Decimal(10, 2)
+  rentDeposit       Decimal?  @db.Decimal(10, 2)
+  rentType          RentType?
+  availableFrom     DateTime?
+  availableDuration Int?
+
+  seller         User            @relation(fields: [sellerId], references: [id])
+  category       Category        @relation(fields: [categoryId], references: [id])
+  orders         Order[]
+  rentalBookings RentalBooking[]
+  swapsAsTarget  SwapRequest[]   @relation("TargetProduct")
+  swapsAsOffered SwapRequest[]   @relation("OfferedProduct")
+  wishlist       Wishlist[]
+  recentlyViewed RecentlyViewed[]
+  reviews        Review[]
+  ecoScores      UserEcoScore[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([approvalStatus, deletedAt])
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id             String      @id @default(uuid())
+  buyerId        String
+  productId      String
+  quantity       Int
+  subtotal       Decimal     @db.Decimal(10, 2)
+  serviceFee     Decimal     @db.Decimal(10, 2)
+  totalAmount    Decimal     @db.Decimal(10, 2)
+  sellerAmount   Decimal     @db.Decimal(10, 2)
+  platformAmount Decimal     @db.Decimal(10, 2)
+  feePercentage  Decimal     @db.Decimal(5, 2)
+  status         OrderStatus @default(PENDING)
+  reservedUntil  DateTime?
+  paymentId      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  buyer   User    @relation("BuyerOrders", fields: [buyerId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  reviews Review[]
+
+  @@index([buyerId])
+  @@index([productId])
+  @@index([status])
+  @@index([reservedUntil])
+}
+
+// ─── Rentals ─────────────────────────────────────────────────────────────────
+
+model RentalBooking {
+  id                String       @id @default(uuid())
+  renterId          String
+  ownerId           String
+  productId         String
+  startDate         DateTime     @db.Date
+  endDate           DateTime     @db.Date
+  duration          Int
+  rentFare          Decimal      @db.Decimal(10, 2)
+  rentDeposit       Decimal      @db.Decimal(10, 2)
+  rentType          RentType
+  totalAmount       Decimal      @db.Decimal(10, 2)
+  serviceFee        Decimal      @db.Decimal(10, 2)
+  sellerAmount      Decimal      @db.Decimal(10, 2)
+  platformAmount    Decimal      @db.Decimal(10, 2)
+  feePercentage     Decimal      @db.Decimal(5, 2)
+  status            RentalStatus @default(PENDING_PAYMENT)
+  stockReserved     Boolean      @default(false)
+  reservedUntil     DateTime?
+  returnRequestedAt DateTime?
+  returnedAt        DateTime?
+  evidencePhotos    String[]
+  paymentId         String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  renter   User    @relation("RenterBookings", fields: [renterId], references: [id])
+  owner    User    @relation("OwnerBookings", fields: [ownerId], references: [id])
+  product  Product @relation(fields: [productId], references: [id])
+  deposit  RentalDeposit?
+  reviews  Review[]
+  disputes Dispute[]
+
+  @@index([productId, startDate, endDate, status])
+  @@index([renterId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([reservedUntil])
+}
+
+model RentalDeposit {
+  id              String        @id @default(uuid())
+  rentalBookingId String        @unique
+  amount          Decimal       @db.Decimal(10, 2)
+  status          DepositStatus @default(HELD)
+  heldAt          DateTime      @default(now())
+  refundedAt      DateTime?
+  forfeitedAt     DateTime?
+  forfeitReason   String?
+  refundReference String?
+  processedBy     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  rentalBooking   RentalBooking @relation(fields: [rentalBookingId], references: [id])
+  processedByUser User?         @relation("ProcessedDeposits", fields: [processedBy], references: [id])
+}
+
+// ─── Swaps ────────────────────────────────────────────────────────────────────
+
+model SwapRequest {
+  id                 String         @id @default(uuid())
+  productId          String
+  offeredProductId   String
+  ownerId            String
+  requesterId        String
+  offeredAmount      Decimal        @default(0) @db.Decimal(10, 2)
+  askingAmount       Decimal        @default(0) @db.Decimal(10, 2)
+  moneyDirection     MoneyDirection @default(NONE)
+  message            String?
+  status             SwapStatus     @default(PENDING)
+  reservedUntil      DateTime?
+  orderDetailsSentAt DateTime?
+  paymentId          String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  product        Product @relation("TargetProduct", fields: [productId], references: [id])
+  offeredProduct Product @relation("OfferedProduct", fields: [offeredProductId], references: [id])
+  owner          User    @relation("OwnerSwaps", fields: [ownerId], references: [id])
+  requester      User    @relation("RequesterSwaps", fields: [requesterId], references: [id])
+
+  negotiationEvents SwapNegotiationEvent[]
+  orderConfirmation SwapOrderConfirmation?
+  swap              Swap?
+  reviews           Review[]
+  disputes          Dispute[]
+
+  @@index([ownerId])
+  @@index([requesterId])
+  @@index([status])
+}
+
+model SwapNegotiationEvent {
+  id             String               @id @default(uuid())
+  swapRequestId  String
+  actorId        String
+  type           NegotiationEventType
+  offeredAmount  Decimal?             @db.Decimal(10, 2)
+  askingAmount   Decimal?             @db.Decimal(10, 2)
+  moneyDirection MoneyDirection?
+  message        String?
+  createdAt      DateTime             @default(now())
+
+  swapRequest SwapRequest @relation(fields: [swapRequestId], references: [id], onDelete: Cascade)
+  actor       User        @relation(fields: [actorId], references: [id])
+
+  @@index([swapRequestId])
+}
+
+model SwapOrderConfirmation {
+  id                   String    @id @default(uuid())
+  swapRequestId        String    @unique
+  ownerConfirmedAt     DateTime?
+  requesterConfirmedAt DateTime?
+  finalCompletedAt     DateTime?
+  createdAt            DateTime  @default(now())
+
+  swapRequest SwapRequest @relation(fields: [swapRequestId], references: [id], onDelete: Cascade)
+}
+
+model Swap {
+  id            String   @id @default(uuid())
+  swapRequestId String   @unique
+  status        String   @default("COMPLETED")
+  createdAt     DateTime @default(now())
+
+  swapRequest SwapRequest @relation(fields: [swapRequestId], references: [id])
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+model Payment {
+  id              String            @id @default(uuid())
+  userId          String
+  sourceType      PaymentSourceType
+  sourceId        String
+  gateway         PaymentGateway
+  pidx            String?           @unique
+  amount          Decimal           @db.Decimal(10, 2)
+  serviceFee      Decimal           @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal           @db.Decimal(10, 2)
+  sellerAmount    Decimal           @default(0) @db.Decimal(10, 2)
+  platformAmount  Decimal           @default(0) @db.Decimal(10, 2)
+  feePercentage   Decimal           @default(0) @db.Decimal(5, 2)
+  status          PaymentStatus     @default(PENDING)
+  requestPayload  Json?
+  responsePayload Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([pidx])
+  @@index([sourceType, sourceId])
+  @@index([userId])
+}
+
+// ─── Wallet / Ledger ─────────────────────────────────────────────────────────
+
+model Wallet {
+  id                   String     @id @default(uuid())
+  userId               String?    @unique
+  walletType           WalletType
+  currency             String     @default("NPR")
+  availableBalance     Decimal    @default(0) @db.Decimal(12, 2)
+  pendingPayoutBalance Decimal    @default(0) @db.Decimal(12, 2)
+  lifetimeCredit       Decimal    @default(0) @db.Decimal(12, 2)
+  lifetimeDebit        Decimal    @default(0) @db.Decimal(12, 2)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  user           User?               @relation(fields: [userId], references: [id])
+  ledgerEntries  WalletLedgerEntry[]
+  payoutRequests PayoutRequest[]
+
+  @@index([walletType])
+}
+
+model WalletLedgerEntry {
+  id             String          @id @default(uuid())
+  walletId       String
+  direction      LedgerDirection
+  entryType      LedgerEntryType
+  amount         Decimal         @db.Decimal(12, 2)
+  balanceAfter   Decimal         @db.Decimal(12, 2)
+  referenceType  String?
+  referenceId    String?
+  metadata       Json?
+  idempotencyKey String          @unique
+  createdAt      DateTime        @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([walletId])
+  @@index([referenceType, referenceId])
+}
+
+model PayoutRequest {
+  id              String       @id @default(uuid())
+  userId          String
+  walletId        String
+  amount          Decimal      @db.Decimal(12, 2)
+  status          PayoutStatus @default(PENDING)
+  note            String?
+  rejectionReason String?
+  payoutReference String?
+  processedBy     String?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user            User   @relation("UserPayouts", fields: [userId], references: [id])
+  wallet          Wallet @relation(fields: [walletId], references: [id])
+  processedByUser User?  @relation("AdminManagedPayouts", fields: [processedBy], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+
+model Review {
+  id              String   @id @default(uuid())
+  reviewerId      String
+  subjectId       String
+  productId       String
+  transactionType String
+  orderId         String?
+  rentalBookingId String?
+  swapId          String?
+  rating          Int
+  body            String?
+  createdAt       DateTime @default(now())
+
+  reviewer      User           @relation("ReviewerReviews", fields: [reviewerId], references: [id])
+  subject       User           @relation("SubjectReviews", fields: [subjectId], references: [id])
+  product       Product        @relation(fields: [productId], references: [id])
+  order         Order?         @relation(fields: [orderId], references: [id])
+  rentalBooking RentalBooking? @relation(fields: [rentalBookingId], references: [id])
+  swapRequest   SwapRequest?   @relation(fields: [swapId], references: [id])
+
+  @@unique([reviewerId, orderId])
+  @@unique([reviewerId, rentalBookingId])
+  @@unique([reviewerId, swapId])
+  @@index([subjectId])
+  @@index([productId])
+}
+
+// ─── Disputes ────────────────────────────────────────────────────────────────
+
+model Dispute {
+  id                String        @id @default(uuid())
+  complainantId     String
+  respondentId      String
+  transactionType   String
+  orderId           String?
+  rentalBookingId   String?
+  swapId            String?
+  subject           String
+  description       String
+  evidencePhotos    String[]
+  status            DisputeStatus @default(OPEN)
+  resolution        String?
+  favoredUserId     String?
+  rentalClaimAmount Decimal?      @db.Decimal(10, 2)
+  resolvedBy        String?
+  resolvedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  complainant    User           @relation("ComplainantDisputes", fields: [complainantId], references: [id])
+  respondent     User           @relation("RespondentDisputes", fields: [respondentId], references: [id])
+  favoredUser    User?          @relation("FavoredDisputes", fields: [favoredUserId], references: [id])
+  resolvedByUser User?          @relation("ResolvedByDisputes", fields: [resolvedBy], references: [id])
+  rentalBooking  RentalBooking? @relation(fields: [rentalBookingId], references: [id])
+  swapRequest    SwapRequest?   @relation(fields: [swapId], references: [id])
+
+  @@index([complainantId])
+  @@index([respondentId])
+  @@index([status])
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+// ─── Eco Score ───────────────────────────────────────────────────────────────
+
+model UserEcoScore {
+  id               String   @id @default(uuid())
+  userId           String
+  transactionType  String
+  productId        String?
+  transactionId    String?
+  ecoPointsAwarded Decimal  @db.Decimal(10, 2)
+  ecoLevel         String
+  createdAt        DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@unique([userId, transactionType, transactionId])
+  @@index([userId])
+}
+
+// ─── Discovery ───────────────────────────────────────────────────────────────
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model RecentlyViewed {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ─── Platform ────────────────────────────────────────────────────────────────
+
+model PlatformSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

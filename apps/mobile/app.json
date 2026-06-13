@@ -1,0 +1,53 @@
+{
+    "expo": {
+        "name": "PUNAP",
+        "slug": "punap",
+        "version": "1.0.0",
+        "scheme": "punap",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "light",
+        "splash": {
+            "image": "./assets/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#1A6B3C"
+        },
+        "ios": {
+            "supportsTablet": false,
+            "bundleIdentifier": "com.punap.app",
+            "infoPlist": {
+                "NSPhotoLibraryUsageDescription": "Allow PUNAP to access your photos to upload evidence for rental returns.",
+                "NSCameraUsageDescription": "Allow PUNAP to use your camera to take photos for rental returns."
+            }
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#1A6B3C"
+            },
+            "package": "com.punap.app",
+            "permissions": [
+                "READ_EXTERNAL_STORAGE",
+                "WRITE_EXTERNAL_STORAGE",
+                "CAMERA"
+            ]
+        },
+        "web": {
+            "bundler": "metro"
+        },
+        "plugins": [
+            "expo-router",
+            "expo-secure-store",
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "Allow PUNAP to access your photos.",
+                    "cameraPermission": "Allow PUNAP to use your camera."
+                }
+            ]
+        ],
+        "experiments": {
+            "typedRoutes": true
+        }
+    }
+}

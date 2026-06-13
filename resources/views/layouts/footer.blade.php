@@ -60,17 +60,17 @@
             <div>
                 <h3 class="font-space text-sm font-bold uppercase tracking-[0.12em] text-[#1a1c1c]">Contact</h3>
                 <div class="mt-4 space-y-3 text-sm leading-relaxed text-[#2f3234]">
-                    <p>Reloop Marketplace</p>
+                    <p>Punap Marketplace</p>
                     <p>Pokhara, Nepal</p>
                     <p><a href="tel:+9779864426265" class="transition-colors hover:text-[#006a38]">9864426265</a></p>
-                    <p><a href="https://reloop-np.me" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-[#006a38]">reloop-np.me</a></p>
+                    <p><a href="https://punap-np.me" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-[#006a38]">punap-np.me</a></p>
                 </div>
             </div>
 
         </div>
 
         <div class="mt-12 flex flex-col items-start justify-between gap-3 border-t border-[rgba(189,202,189,0.45)] pt-6 text-sm text-[#2f3234] md:flex-row md:items-center">
-            <p>© {{ date('Y') }} reloop-np.me | All Rights Reserved.</p>
+            <p>© {{ date('Y') }} punap-np.me | All Rights Reserved.</p>
         </div>
     </div>
 </footer>

@@ -21,3 +21,13 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Turborepo
+.turbo
+
+# Monorepo build outputs
+apps/*/dist
+packages/*/dist
+
+# Expo
+apps/mobile/.expo

@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "lib": ["ES2022"],
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "outDir": "dist",
+        "paths": {
+            "@punap/types": ["./packages/types/src/index.ts"],
+            "@punap/utils": ["./packages/utils/src/index.ts"]
+        }
+    },
+    "exclude": [
+        "node_modules",
+        "vendor",
+        "public",
+        "storage",
+        "bootstrap"
+    ]
+}

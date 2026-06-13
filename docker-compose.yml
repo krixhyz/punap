@@ -1,0 +1,22 @@
+services:
+  postgres_punap_new:
+    image: postgres:16
+    container_name: punap_postgres_new
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: punap_new
+      POSTGRES_USER: punap
+      POSTGRES_PASSWORD: punap_password
+    ports:
+      # Port 5433 avoids conflict with any existing Postgres on 5432
+      - "5433:5432"
+    volumes:
+      - punap_postgres_new_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U punap -d punap_new"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  punap_postgres_new_data:

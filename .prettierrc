@@ -1,0 +1,15 @@
+{
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 100,
+    "tabWidth": 4,
+    "overrides": [
+        {
+            "files": ["apps/**", "packages/**"],
+            "options": {
+                "tabWidth": 4
+            }
+        }
+    ]
+}

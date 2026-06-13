@@ -1,4 +1,4 @@
-# Reloop — Design System v2.0
+# Punap — Design System v2.0
 ## Creative North Star: The Curated Brutalist
 
 This system replaces default web aesthetics with a high-end editorial presence. Sharp 0px corners, tonal layering over borders, gradient CTAs, and Space Grotesk typography project architectural confidence. Every component is designed to be immediately navigable, scannable on mobile, and reactive without feeling flashy.

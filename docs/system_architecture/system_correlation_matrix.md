@@ -1,6 +1,6 @@
-# ReLoop System Correlation Matrix
+# Punap System Correlation Matrix
 
-This document provides a system-wide correlation matrix that models the relationships between system requirements, core modules, database entities, and their interdependencies within the ReLoop specific architecture. 
+This document provides a system-wide correlation matrix that models the relationships between system requirements, core modules, database entities, and their interdependencies within the Punap specific architecture.
 
 ## 1. Requirements to Modules Traceability Matrix
 
@@ -57,4 +57,4 @@ This matrix analyzes high-level architectural correlations between application s
 ---
 
 ## Technical Context
-The ReLoop application utilizes conditional state flow, which means the **Product Type** (JSON configured array: `[buy, rent, swap]`) strongly correlates to how the frontend renders the detail component CTA, directly coupling the user experience state with the backend schema validation format.
+The Punap application utilizes conditional state flow, which means the **Product Type** (JSON configured array: `[buy, rent, swap]`) strongly correlates to how the frontend renders the detail component CTA, directly coupling the user experience state with the backend schema validation format.

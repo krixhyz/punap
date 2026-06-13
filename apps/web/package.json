@@ -1,0 +1,38 @@
+{
+    "name": "@punap/web",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite --port 5173",
+        "preview": "vite preview",
+        "lint": "eslint src/",
+        "test": "echo 'no tests yet'",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@punap/types": "*",
+        "@punap/utils": "*",
+        "@tanstack/react-query": "^5.101.0",
+        "@tanstack/react-query-devtools": "^5.101.0",
+        "axios": "^1.7.9",
+        "date-fns": "^4.1.0",
+        "lucide-react": "^0.468.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-hot-toast": "^2.4.1",
+        "react-router-dom": "^7.0.2",
+        "socket.io-client": "^4.8.3",
+        "zustand": "^5.0.3"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "@types/react": "^19.0.1",
+        "@types/react-dom": "^19.0.1",
+        "@vitejs/plugin-react": "^4.3.4",
+        "tailwindcss": "^4.0.0",
+        "typescript": "^5.5.0",
+        "vite": "^6.0.3"
+    }
+}

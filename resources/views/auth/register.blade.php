@@ -23,7 +23,7 @@
 
     <div class="text-center mb-6 md:mb-8">
         <p class="font-space text-[11px] font-bold uppercase tracking-widest text-[#444746] mb-2">Create Account</p>
-        <h1 class="font-space font-bold text-3xl md:text-4xl text-[#1a1c1c] mb-1">Join Reloop</h1>
+        <h1 class="font-space font-bold text-3xl md:text-4xl text-[#1a1c1c] mb-1">Join Punap</h1>
         <p class="font-manrope text-sm text-[#444746]">Set up your account to buy, rent, swap, and manage your activity.</p>
     </div>
 
