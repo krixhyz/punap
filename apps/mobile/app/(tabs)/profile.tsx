@@ -86,7 +86,7 @@ function ProfileContent() {
 
     const menuItems = [
         { label: '✏️  Edit Profile', onPress: () => router.push('/profile/edit') },
-        { label: '💰  Wallet', onPress: () => router.push('/wallet/') },
+        { label: '💰  Wallet', onPress: () => router.push('/wallet') },
         { label: '📋  My Listings', onPress: () => {} },
         { label: '🔔  Notifications', onPress: () => router.push('/(tabs)/notifications') },
         { label: '🚪  Logout', onPress: handleLogout, danger: true },
